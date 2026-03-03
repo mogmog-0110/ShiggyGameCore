@@ -3,10 +3,12 @@ build/
 out/
 cmake-build-*/
 
-# IDE
+# IDE / Editor
 .vs/
 .vscode/
 .idea/
+.claude/
+.takt/
 *.sln
 *.vcxproj*
 *.user
@@ -43,4 +45,6 @@ tasks/
 # Misc
 *.log
 *.tmp
+*.md
+!README.md
 .env
