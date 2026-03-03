@@ -1,0 +1,51 @@
+---
+Language: Cpp
+BasedOnStyle: LLVM
+
+# Braces: Allman style
+BreakBeforeBraces: Allman
+
+# Indentation
+UseTab: ForIndentation
+TabWidth: 4
+IndentWidth: 4
+ContinuationIndentWidth: 4
+
+# Line width
+ColumnLimit: 120
+
+# Includes
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^<[a-z_]+>'       # C standard headers
+    Priority: 1
+  - Regex: '^<.+>'            # C++ / external headers
+    Priority: 2
+  - Regex: '^"sgc/'           # Project headers
+    Priority: 3
+  - Regex: '.*'
+    Priority: 4
+
+# Namespaces
+NamespaceIndentation: None
+CompactNamespaces: false
+FixNamespaceComments: true
+
+# Classes / Structs
+AccessModifierOffset: -4
+
+# Functions
+AllowShortFunctionsOnASingleLine: Inline
+AlwaysBreakTemplateDeclarations: Yes
+
+# Other
+PointerAlignment: Left
+ReferenceAlignment: Left
+SpaceAfterCStyleCast: false
+SpaceAfterTemplateKeyword: true
+SpaceBeforeParens: ControlStatements
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AlignTrailingComments: true
+...
