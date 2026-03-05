@@ -6,6 +6,7 @@
 /// グローバルなシングルトンの代替。テスト時にサービスの差し替えが容易。
 
 #include <memory>
+#include <mutex>
 #include <shared_mutex>
 #include <stdexcept>
 #include <typeindex>
