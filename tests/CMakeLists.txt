@@ -1,4 +1,4 @@
-include(FetchContent)
+﻿include(FetchContent)
 
 FetchContent_Declare(
 	Catch2
@@ -9,7 +9,68 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Catch2)
 
 add_executable(sgc_tests
+	# Core
 	TestCore.cpp
+	core/TestAssert.cpp
+	core/TestScopeGuard.cpp
+	core/TestFlags.cpp
+	core/TestTypeId.cpp
+	core/TestTimer.cpp
+	core/TestRandom.cpp
+	core/TestLogger.cpp
+	core/TestCoroutine.cpp
+	core/TestSerialize.cpp
+
+	# Types
+	types/TestConcepts.cpp
+	types/TestResult.cpp
+	types/TestTypeList.cpp
+	types/TestTypeTraits.cpp
+	types/TestColor.cpp
+
+	# Math
+	math/TestMathConstants.cpp
+	math/TestVec2.cpp
+	math/TestVec3.cpp
+	math/TestVec4.cpp
+	math/TestMat3.cpp
+	math/TestMat4.cpp
+	math/TestQuaternion.cpp
+	math/TestEasing.cpp
+	math/TestInterpolation.cpp
+	math/TestGeometry.cpp
+	math/TestRect.cpp
+	math/TestPlane.cpp
+	math/TestRay3.cpp
+	math/TestFrustum.cpp
+	math/TestIntersection.cpp
+	math/TestNoise.cpp
+
+	# Patterns
+	patterns/TestEventDispatcher.cpp
+	patterns/TestStateMachine.cpp
+	patterns/TestObjectPool.cpp
+	patterns/TestCommand.cpp
+	patterns/TestObserver.cpp
+	patterns/TestServiceLocator.cpp
+
+	# Animation
+	animation/TestTween.cpp
+
+	# Spatial
+	spatial/TestGrid.cpp
+	spatial/TestQuadtree.cpp
+	spatial/TestOctree.cpp
+
+	# AI
+	ai/TestBehaviorTree.cpp
+
+	# ECS
+	ecs/TestECS.cpp
+
+	# Memory
+	memory/TestArenaAllocator.cpp
+	memory/TestPoolAllocator.cpp
 )
 
 target_link_libraries(sgc_tests PRIVATE

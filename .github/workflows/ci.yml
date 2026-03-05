@@ -18,11 +18,15 @@ jobs:
           - os: ubuntu-latest
             preset: gcc-debug
             name: GCC
-            install: g++-12
+            install: g++-13
+            cc: gcc-13
+            cxx: g++-13
           - os: ubuntu-latest
             preset: clang-debug
             name: Clang
-            install: clang-15
+            install: "clang-18 libc++-18-dev libc++abi-18-dev"
+            cc: clang-18
+            cxx: clang++-18
 
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
@@ -45,12 +49,22 @@ jobs:
 
       - name: Configure
         run: cmake --preset ${{ matrix.preset }}
+        env:
+          CC: ${{ matrix.cc || '' }}
+          CXX: ${{ matrix.cxx || '' }}
 
       - name: Build
-        run: cmake --build build
+        run: cmake --build build --config Debug
 
       - name: Test
-        run: ctest --test-dir build --output-on-failure
+        run: ctest --test-dir build -C Debug --output-on-failure
+
+      - name: Upload test logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.name }}
+          path: build/Testing/
 
   clang-tidy:
     name: clang-tidy
@@ -62,10 +76,10 @@ jobs:
       - name: Install tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang-15 clang-tidy-15
-          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-15 100
-          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-15 100
-          sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-15 100
+          sudo apt-get install -y clang-18 clang-tidy-18 libc++-18-dev libc++abi-18-dev
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100
+          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 100
+          sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-18 100
 
       - name: Cache dependencies
         uses: actions/cache@v4

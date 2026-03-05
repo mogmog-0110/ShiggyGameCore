@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21)
+﻿cmake_minimum_required(VERSION 3.21)
 
 project(ShiggyGameCore
 	VERSION 0.1.0
@@ -32,6 +32,17 @@ endif()
 if(SGC_BUILD_TESTS)
 	enable_testing()
 	add_subdirectory(tests)
+endif()
+
+# ── Examples ──────────────────────────────────────────────────────
+if(PROJECT_IS_TOP_LEVEL)
+	option(SGC_BUILD_EXAMPLES "Build examples" ON)
+else()
+	option(SGC_BUILD_EXAMPLES "Build examples" OFF)
+endif()
+
+if(SGC_BUILD_EXAMPLES)
+	add_subdirectory(examples)
 endif()
 
 # ── Install / Export ─────────────────────────────────────────────
