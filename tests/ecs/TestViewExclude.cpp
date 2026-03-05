@@ -126,6 +126,39 @@ TEST_CASE("ExcludeView isValid returns false without storages", "[ecs][view][exc
 	REQUIRE_FALSE(view.isValid());
 }
 
+TEST_CASE("ExcludeView eachEntity filters excluded and returns entity", "[ecs][view][exclude]")
+{
+	sgc::ecs::World world;
+
+	auto e1 = world.createEntity();
+	world.addComponent(e1, Position{1.0f, 0.0f});
+	world.addComponent(e1, Velocity{1.0f, 0.0f});
+
+	auto e2 = world.createEntity();
+	world.addComponent(e2, Position{2.0f, 0.0f});
+	world.addComponent(e2, Velocity{1.0f, 0.0f});
+	world.addComponent(e2, Dead{});
+
+	auto e3 = world.createEntity();
+	world.addComponent(e3, Position{3.0f, 0.0f});
+	world.addComponent(e3, Velocity{1.0f, 0.0f});
+
+	std::vector<sgc::ecs::Entity> collected;
+	auto view = world.viewExclude<Position, Velocity>(sgc::ecs::Exclude<Dead>{});
+	view.eachEntity([&](sgc::ecs::Entity entity, Position&, Velocity&)
+	{
+		collected.push_back(entity);
+	});
+
+	REQUIRE(collected.size() == 2);
+	// e2 (Dead) should be excluded
+	for (const auto& ent : collected)
+	{
+		REQUIRE(world.isAlive(ent));
+		REQUIRE_FALSE(world.hasComponent<Dead>(ent));
+	}
+}
+
 TEST_CASE("Regular View still works after exclude modification", "[ecs][view]")
 {
 	sgc::ecs::World world;

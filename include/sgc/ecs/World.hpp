@@ -274,6 +274,62 @@ public:
 		}
 	}
 
+	/// @brief 指定コンポーネントを全て持つエンティティに対してEntity付きで関数を実行する
+	///
+	/// forEach()と同様だが、コールバックの第1引数にEntityを渡す。
+	/// ループ内でgetComponent()やdestroyEntity()を呼ぶ場合に使用する。
+	///
+	/// @tparam First 最初のコンポーネント型
+	/// @tparam Rest 残りのコンポーネント型
+	/// @tparam Func コールバック型
+	/// @param func コールバック関数 (Entity, First&, Rest&...)
+	///
+	/// @code
+	/// world.forEachEntity<Position, Velocity>([&](sgc::ecs::Entity entity, Position& pos, Velocity& vel) {
+	///     if (pos.x < 0) world.destroyEntity(entity);
+	/// });
+	/// @endcode
+	template <typename First, typename... Rest, typename Func>
+	void forEachEntity(Func&& func)
+	{
+		auto* firstTyped = findStorage<First>();
+		if (!firstTyped) return;
+
+		if constexpr (sizeof...(Rest) > 0)
+		{
+			auto restStorages = std::make_tuple(findStorage<Rest>()...);
+			const bool allFound = (std::get<TypedStorage<Rest>*>(restStorages) && ...);
+			if (!allFound) return;
+
+			const auto& entities = firstTyped->storage().entities();
+			for (std::size_t i = 0; i < entities.size(); ++i)
+			{
+				const EntityId id = entities[i];
+				if (id >= m_generations.size()) continue;
+
+				const bool hasAll = (std::get<TypedStorage<Rest>*>(restStorages)->storage().has(id) && ...);
+				if (!hasAll) continue;
+
+				func(
+					Entity{id, m_generations[id]},
+					*firstTyped->storage().get(id),
+					*std::get<TypedStorage<Rest>*>(restStorages)->storage().get(id)...
+				);
+			}
+		}
+		else
+		{
+			const auto& entities = firstTyped->storage().entities();
+			for (std::size_t i = 0; i < entities.size(); ++i)
+			{
+				const EntityId id = entities[i];
+				if (id >= m_generations.size()) continue;
+
+				func(Entity{id, m_generations[id]}, *firstTyped->storage().get(id));
+			}
+		}
+	}
+
 	/// @brief 再利用可能なクエリビューを作成する
 	///
 	/// ストレージポインタをキャッシュし、毎フレームのforEachより効率的なイテレーションを提供する。
@@ -376,6 +432,18 @@ public:
 	[[nodiscard]] std::size_t entityCount() const noexcept
 	{
 		return m_entityCount;
+	}
+
+	/// @brief 指定型のコンポーネントストレージが存在するか確認する
+	///
+	/// SystemTraitsの実行時検証（validateSystemRequirements）で使用する。
+	///
+	/// @tparam T コンポーネント型
+	/// @return ストレージが存在すればtrue
+	template <typename T>
+	[[nodiscard]] bool hasStorage() const
+	{
+		return m_storages.find(typeId<T>()) != m_storages.end();
 	}
 
 private:

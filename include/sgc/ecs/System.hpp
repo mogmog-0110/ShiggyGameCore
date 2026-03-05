@@ -27,6 +27,8 @@
 #include <memory>
 #include <vector>
 
+#include "sgc/ecs/SystemTraits.hpp"
+
 namespace sgc::ecs
 {
 
@@ -68,6 +70,14 @@ public:
 	template <System S>
 	void addSystem(S system, Phase phase = Phase::Update, SystemPriority priority = 0)
 	{
+		// requires_components が定義されている場合、TypeListであることを検証する
+		if constexpr (HasRequiredComponents<S>)
+		{
+			static_assert(
+				IsTypeList<typename S::requires_components>,
+				"requires_components must be a sgc::TypeList<...>");
+		}
+
 		m_systems.push_back(
 			std::make_unique<SystemWrapper<S>>(std::move(system), phase, priority));
 		m_sorted = false;

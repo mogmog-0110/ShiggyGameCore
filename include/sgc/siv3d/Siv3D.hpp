@@ -12,6 +12,7 @@
 /// @endcode
 
 #include "sgc/siv3d/TypeConvert.hpp"
-#include "sgc/siv3d/InputAdapter.hpp"
-#include "sgc/siv3d/DrawAdapter.hpp"
 #include "sgc/siv3d/SceneAdapter.hpp"
+#include "sgc/siv3d/Siv3DRenderer.hpp"
+#include "sgc/siv3d/Siv3DInputProvider.hpp"
+#include "sgc/siv3d/Siv3DTextRenderer.hpp"

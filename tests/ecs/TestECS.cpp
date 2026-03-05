@@ -298,6 +298,86 @@ TEST_CASE("World destroyEntity cleans up components", "[ecs][world]")
 	REQUIRE(world.getComponent<Velocity>(e) == nullptr);
 }
 
+// ── forEachEntity ───────────────────────────────────────────────
+
+TEST_CASE("World forEachEntity single component", "[ecs][world]")
+{
+	sgc::ecs::World world;
+	auto e1 = world.createEntity();
+	auto e2 = world.createEntity();
+	world.addComponent(e1, Position{1.0f, 0.0f});
+	world.addComponent(e2, Position{2.0f, 0.0f});
+
+	std::vector<sgc::ecs::Entity> collected;
+	world.forEachEntity<Position>([&](sgc::ecs::Entity entity, Position&)
+	{
+		collected.push_back(entity);
+	});
+
+	REQUIRE(collected.size() == 2);
+	REQUIRE(world.isAlive(collected[0]));
+	REQUIRE(world.isAlive(collected[1]));
+}
+
+TEST_CASE("World forEachEntity multiple components", "[ecs][world]")
+{
+	sgc::ecs::World world;
+	auto e1 = world.createEntity();
+	auto e2 = world.createEntity();
+	auto e3 = world.createEntity();
+
+	world.addComponent(e1, Position{1.0f, 0.0f});
+	world.addComponent(e1, Velocity{10.0f, 0.0f});
+
+	world.addComponent(e2, Position{2.0f, 0.0f});
+	world.addComponent(e2, Velocity{20.0f, 0.0f});
+
+	world.addComponent(e3, Position{3.0f, 0.0f});
+	// e3 has no Velocity
+
+	int count = 0;
+	world.forEachEntity<Position, Velocity>(
+		[&](sgc::ecs::Entity, Position&, Velocity&) { ++count; });
+
+	REQUIRE(count == 2);
+}
+
+TEST_CASE("World forEachEntity skips missing components", "[ecs][world]")
+{
+	sgc::ecs::World world;
+	auto e = world.createEntity();
+	world.addComponent(e, Position{1.0f, 0.0f});
+
+	int count = 0;
+	world.forEachEntity<Position, Velocity>(
+		[&](sgc::ecs::Entity, Position&, Velocity&) { ++count; });
+
+	REQUIRE(count == 0);
+}
+
+TEST_CASE("World forEachEntity provides correct entity for getComponent", "[ecs][world]")
+{
+	sgc::ecs::World world;
+	auto e1 = world.createEntity();
+	auto e2 = world.createEntity();
+	world.addComponent(e1, Position{1.0f, 0.0f});
+	world.addComponent(e1, Velocity{10.0f, 0.0f});
+	world.addComponent(e1, Health{50});
+	world.addComponent(e2, Position{2.0f, 0.0f});
+	world.addComponent(e2, Velocity{20.0f, 0.0f});
+
+	// forEachEntity でEntityを使ってHealthを取得
+	int healthSum = 0;
+	world.forEachEntity<Position, Velocity>(
+		[&](sgc::ecs::Entity entity, Position&, Velocity&)
+		{
+			auto* h = world.getComponent<Health>(entity);
+			if (h) healthSum += h->hp;
+		});
+
+	REQUIRE(healthSum == 50);
+}
+
 // ── View ────────────────────────────────────────────────────────
 
 TEST_CASE("View basic usage with single component", "[ecs][view]")
@@ -370,6 +450,59 @@ TEST_CASE("View matches forEach results", "[ecs][view]")
 
 	REQUIRE(forEachCount == viewCount);
 	REQUIRE(forEachCount == 50);
+}
+
+TEST_CASE("View eachEntity returns correct entity", "[ecs][view]")
+{
+	sgc::ecs::World world;
+	auto e1 = world.createEntity();
+	auto e2 = world.createEntity();
+	world.addComponent(e1, Position{1.0f, 0.0f});
+	world.addComponent(e1, Velocity{10.0f, 0.0f});
+	world.addComponent(e2, Position{2.0f, 0.0f});
+	world.addComponent(e2, Velocity{20.0f, 0.0f});
+
+	auto view = world.view<Position, Velocity>();
+	std::vector<sgc::ecs::Entity> entities;
+	view.eachEntity([&](sgc::ecs::Entity entity, Position&, Velocity&)
+	{
+		entities.push_back(entity);
+	});
+
+	REQUIRE(entities.size() == 2);
+	REQUIRE(world.isAlive(entities[0]));
+	REQUIRE(world.isAlive(entities[1]));
+}
+
+TEST_CASE("View eachEntity matches forEachEntity results", "[ecs][view]")
+{
+	sgc::ecs::World world;
+	for (int i = 0; i < 50; ++i)
+	{
+		auto e = world.createEntity();
+		world.addComponent(e, Position{static_cast<float>(i), 0.0f});
+		if (i % 3 == 0) world.addComponent(e, Velocity{1.0f, 0.0f});
+	}
+
+	std::vector<sgc::ecs::Entity> forEachResult;
+	world.forEachEntity<Position, Velocity>(
+		[&](sgc::ecs::Entity entity, Position&, Velocity&)
+		{
+			forEachResult.push_back(entity);
+		});
+
+	auto view = world.view<Position, Velocity>();
+	std::vector<sgc::ecs::Entity> viewResult;
+	view.eachEntity([&](sgc::ecs::Entity entity, Position&, Velocity&)
+	{
+		viewResult.push_back(entity);
+	});
+
+	REQUIRE(forEachResult.size() == viewResult.size());
+	for (std::size_t i = 0; i < forEachResult.size(); ++i)
+	{
+		REQUIRE(forEachResult[i] == viewResult[i]);
+	}
 }
 
 TEST_CASE("View isValid returns false when storage missing", "[ecs][view]")

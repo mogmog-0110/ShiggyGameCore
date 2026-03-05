@@ -3,7 +3,9 @@
 /// @file SharedData.hpp
 /// @brief シーン間で共有するデータ
 
-#include <Siv3D.hpp>
+#include "sgc/graphics/IRenderer.hpp"
+#include "sgc/graphics/ITextRenderer.hpp"
+#include "sgc/input/IInputProvider.hpp"
 
 /// @brief シーン間共有データ
 ///
@@ -11,9 +13,9 @@
 /// App<SharedData> のテンプレート引数として使用する。
 struct SharedData
 {
-	int score = 0;           ///< 現在のスコア
-	int highScore = 0;       ///< ハイスコア
-	s3d::Font titleFont;     ///< タイトル用フォント
-	s3d::Font uiFont;        ///< UI用フォント
-	s3d::Font scoreFont;     ///< スコア表示用フォント
+	int score = 0;                              ///< 現在のスコア
+	int highScore = 0;                          ///< ハイスコア
+	sgc::IRenderer* renderer = nullptr;         ///< 描画インターフェース
+	sgc::ITextRenderer* textRenderer = nullptr; ///< テキスト描画インターフェース
+	sgc::IInputProvider* inputProvider = nullptr; ///< 入力プロバイダー
 };

@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include "sgc/core/Hash.hpp"
 #include "sgc/scene/SceneManager.hpp"
 
 namespace
@@ -225,4 +226,97 @@ TEST_CASE("SceneManager getFadeProgress is 0 when no fade", "[scene]")
 {
 	sgc::SceneManager manager;
 	REQUIRE(manager.getFadeProgress() == 0.0f);
+}
+
+// ── ID-based scene transitions ──────────────────────────
+
+using namespace sgc::literals;
+
+TEST_CASE("SceneManager registerScene and changeScene by ID", "[scene][id]")
+{
+	g_log.clear();
+	sgc::SceneManager manager;
+	manager.registerScene<TestScene>("title"_hash, "Title");
+	manager.registerScene<TestScene>("game"_hash, "Game");
+
+	manager.pushScene("title"_hash);
+	REQUIRE(manager.depth() == 1);
+
+	manager.changeScene("game"_hash, 1.0f);
+	REQUIRE(manager.fadeState() == sgc::FadeState::FadingOut);
+
+	// フェードアウト完了 → シーン切り替え
+	manager.update(0.6f);
+	REQUIRE(manager.fadeState() == sgc::FadeState::FadingIn);
+
+	auto* top = dynamic_cast<TestScene*>(manager.top());
+	REQUIRE(top != nullptr);
+	REQUIRE(top->name() == "Game");
+}
+
+TEST_CASE("SceneManager changeScene with unknown ID returns false", "[scene][id]")
+{
+	sgc::SceneManager manager;
+	manager.registerScene<TestScene>("title"_hash, "Title");
+	manager.pushScene("title"_hash);
+
+	REQUIRE_FALSE(manager.changeScene("unknown"_hash, 1.0f));
+	REQUIRE(manager.fadeState() == sgc::FadeState::None);
+}
+
+TEST_CASE("SceneManager replaceScene by ID", "[scene][id]")
+{
+	g_log.clear();
+	sgc::SceneManager manager;
+	manager.registerScene<TestScene>("title"_hash, "Title");
+	manager.registerScene<TestScene>("game"_hash, "Game");
+
+	manager.pushScene("title"_hash);
+	REQUIRE(manager.replaceScene("game"_hash));
+	REQUIRE(manager.depth() == 1);
+
+	auto* top = dynamic_cast<TestScene*>(manager.top());
+	REQUIRE(top != nullptr);
+	REQUIRE(top->name() == "Game");
+}
+
+TEST_CASE("SceneManager pushScene by ID", "[scene][id]")
+{
+	g_log.clear();
+	sgc::SceneManager manager;
+	manager.registerScene<TestScene>("title"_hash, "Title");
+	manager.registerScene<TestScene>("game"_hash, "Game");
+
+	manager.pushScene("title"_hash);
+	manager.pushScene("game"_hash);
+	REQUIRE(manager.depth() == 2);
+
+	auto* top = dynamic_cast<TestScene*>(manager.top());
+	REQUIRE(top->name() == "Game");
+}
+
+TEST_CASE("SceneManager template and ID APIs coexist", "[scene][id]")
+{
+	g_log.clear();
+	sgc::SceneManager manager;
+	manager.registerScene<TestScene>("game"_hash, "Game");
+
+	// テンプレートAPIでpush
+	manager.push<TestScene>("Title");
+	REQUIRE(manager.depth() == 1);
+
+	// ID APIでchangeScene
+	manager.changeScene("game"_hash, 0.2f);
+	manager.update(0.2f); // フェードアウト完了
+	REQUIRE(manager.fadeState() == sgc::FadeState::FadingIn);
+
+	auto* top = dynamic_cast<TestScene*>(manager.top());
+	REQUIRE(top->name() == "Game");
+}
+
+TEST_CASE("SceneManager pushScene with unknown ID returns false", "[scene][id]")
+{
+	sgc::SceneManager manager;
+	REQUIRE_FALSE(manager.pushScene("nonexistent"_hash));
+	REQUIRE(manager.empty());
 }

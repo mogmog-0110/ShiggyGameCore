@@ -87,6 +87,38 @@ public:
 		}
 	}
 
+	/// @brief 全てのコンポーネントを持つエンティティに対してEntity付きで関数を実行する
+	/// @tparam Func コールバック型 (Entity, Components&...)
+	/// @param func コールバック関数
+	///
+	/// @code
+	/// auto view = world.view<Position, Velocity>();
+	/// view.eachEntity([&](sgc::ecs::Entity entity, Position& pos, Velocity& vel) {
+	///     if (pos.x < 0) world.destroyEntity(entity);
+	/// });
+	/// @endcode
+	template <typename Func>
+	void eachEntity(Func&& func)
+	{
+		if (!isValid()) return;
+
+		auto* firstStorage = std::get<0>(m_storages);
+		const auto& entities = firstStorage->storage().entities();
+
+		for (std::size_t i = 0; i < entities.size(); ++i)
+		{
+			const EntityId id = entities[i];
+			if (id >= m_generations.size()) continue;
+
+			if (!hasAllComponents<1>(id)) continue;
+
+			func(
+				Entity{id, m_generations[id]},
+				*std::get<TypedStorage<Components>*>(m_storages)->storage().get(id)...
+			);
+		}
+	}
+
 	/// @brief ビューが有効か（全ストレージが存在するか）
 	/// @return 全ストレージが非nullならtrue
 	[[nodiscard]] bool isValid() const noexcept
@@ -168,6 +200,32 @@ public:
 			if (hasAnyExclude(id)) continue;
 
 			func(*std::get<TypedStorage<Includes>*>(m_includeStorages)->storage().get(id)...);
+		}
+	}
+
+	/// @brief 条件に合うエンティティに対してEntity付きで関数を実行する
+	/// @tparam Func コールバック型 (Entity, Includes&...)
+	/// @param func コールバック関数
+	template <typename Func>
+	void eachEntity(Func&& func)
+	{
+		if (!isValid()) return;
+
+		auto* firstStorage = std::get<0>(m_includeStorages);
+		const auto& entities = firstStorage->storage().entities();
+
+		for (std::size_t i = 0; i < entities.size(); ++i)
+		{
+			const EntityId id = entities[i];
+			if (id >= m_generations.size()) continue;
+
+			if (!hasAllIncludes<1>(id)) continue;
+			if (hasAnyExclude(id)) continue;
+
+			func(
+				Entity{id, m_generations[id]},
+				*std::get<TypedStorage<Includes>*>(m_includeStorages)->storage().get(id)...
+			);
 		}
 	}
 

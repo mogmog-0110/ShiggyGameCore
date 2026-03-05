@@ -4,7 +4,7 @@
 /// @brief 描画システム
 
 #include "sgc/ecs/World.hpp"
-#include "sgc/siv3d/DrawAdapter.hpp"
+#include "sgc/graphics/IRenderer.hpp"
 
 #include "Components.hpp"
 
@@ -12,15 +12,21 @@
 ///
 /// CTransformとCSpriteを持つ全エンティティを描画する。
 /// Phase::Render, Priority 0 で実行する。
+/// IRenderer経由で描画し、フレームワーク非依存で動作する。
 struct RenderSystem
 {
+	sgc::IRenderer* renderer = nullptr;  ///< 描画インターフェース
+
 	/// @brief 全描画対象エンティティを描画する
 	void update(sgc::ecs::World& world, float /*dt*/)
 	{
+		if (!renderer) return;
+
+		auto* r = renderer;
 		world.forEach<CTransform, CSprite>(
-			[](const CTransform& transform, const CSprite& sprite)
+			[r](const CTransform& transform, const CSprite& sprite)
 			{
-				sgc::siv3d::drawCircle(transform.pos, sprite.radius, sprite.color);
+				r->drawCircle(transform.pos, sprite.radius, sprite.color);
 			});
 	}
 };

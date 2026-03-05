@@ -19,8 +19,10 @@
 
 #include <concepts>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <memory>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -28,6 +30,12 @@
 
 namespace sgc
 {
+
+/// @brief シーンID型（Hash.hppの_hashで生成）
+using SceneId = std::uint64_t;
+
+/// @brief シーンファクトリ関数型
+using SceneFactory = std::function<std::unique_ptr<Scene>()>;
 
 /// @brief フェード状態
 enum class FadeState
@@ -209,8 +217,92 @@ public:
 		return m_scenes.back().get();
 	}
 
+	// ── ID指定シーン管理 ─────────────────────────────────
+
+	/// @brief シーンファクトリを登録する
+	/// @param id シーンID（Hash.hppの_hashで生成）
+	/// @param factory シーン生成関数
+	void registerScene(SceneId id, SceneFactory factory)
+	{
+		m_factories[id] = std::move(factory);
+	}
+
+	/// @brief テンプレートでシーンファクトリを登録する
+	/// @tparam S Scene派生クラス
+	/// @tparam Args コンストラクタ引数型
+	/// @param id シーンID
+	/// @param args コンストラクタ引数（ファクトリ内でコピーされる）
+	template <typename S, typename... Args>
+		requires std::derived_from<S, Scene>
+	void registerScene(SceneId id, Args&&... args)
+	{
+		m_factories[id] = [... capturedArgs = std::forward<Args>(args)]() mutable -> std::unique_ptr<Scene>
+		{
+			return std::make_unique<S>(std::move(capturedArgs)...);
+		};
+	}
+
+	/// @brief ID指定でフェード付きシーン遷移する
+	/// @param id 遷移先シーンID
+	/// @param fadeDuration フェードの合計時間（秒）
+	/// @return 登録済みIDならtrue、未登録ならfalse
+	bool changeScene(SceneId id, float fadeDuration)
+	{
+		auto it = m_factories.find(id);
+		if (it == m_factories.end()) return false;
+
+		m_fadeDuration = fadeDuration / 2.0f;
+		m_fadeElapsed = 0.0f;
+		m_fadeState = FadeState::FadingOut;
+		m_pendingScene = [this, id]()
+		{
+			replaceScene(id);
+		};
+		return true;
+	}
+
+	/// @brief ID指定でトップシーンを置換する
+	/// @param id 遷移先シーンID
+	/// @return 登録済みIDならtrue、未登録ならfalse
+	bool replaceScene(SceneId id)
+	{
+		auto it = m_factories.find(id);
+		if (it == m_factories.end()) return false;
+
+		if (!m_scenes.empty())
+		{
+			m_scenes.back()->onExit();
+			m_scenes.pop_back();
+		}
+
+		auto scene = it->second();
+		scene->onEnter();
+		m_scenes.push_back(std::move(scene));
+		return true;
+	}
+
+	/// @brief ID指定でシーンをスタックに積む
+	/// @param id シーンID
+	/// @return 登録済みIDならtrue、未登録ならfalse
+	bool pushScene(SceneId id)
+	{
+		auto it = m_factories.find(id);
+		if (it == m_factories.end()) return false;
+
+		if (!m_scenes.empty())
+		{
+			m_scenes.back()->onPause();
+		}
+
+		auto scene = it->second();
+		scene->onEnter();
+		m_scenes.push_back(std::move(scene));
+		return true;
+	}
+
 private:
 	std::vector<std::unique_ptr<Scene>> m_scenes;  ///< シーンスタック
+	std::unordered_map<SceneId, SceneFactory> m_factories;  ///< シーンファクトリ登録
 
 	// フェード関連
 	FadeState m_fadeState{FadeState::None};

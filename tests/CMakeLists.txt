@@ -77,10 +77,17 @@ add_executable(sgc_tests
 	ecs/TestSystem.cpp
 	ecs/TestCommandBuffer.cpp
 	ecs/TestViewExclude.cpp
+	ecs/TestSystemTraits.cpp
+
+	# Graphics
+	graphics/TestRenderer.cpp
+	graphics/TestTextMeasure.cpp
+	graphics/TestTextRenderer.cpp
 
 	# Input
 	input/TestActionMap.cpp
 	input/TestInputBuffer.cpp
+	input/TestInputProvider.cpp
 
 	# Effects
 	effects/TestParticleSystem.cpp
@@ -91,6 +98,8 @@ add_executable(sgc_tests
 
 	# Scene
 	scene/TestScene.cpp
+	scene/TestSceneIntegration.cpp
+	scene/TestAppBase.cpp
 	scene/TestTransform.cpp
 	scene/TestCamera.cpp
 
@@ -102,6 +111,16 @@ add_executable(sgc_tests
 	memory/TestPoolAllocator.cpp
 	memory/TestStackAllocator.cpp
 	memory/TestFreeListAllocator.cpp
+
+	# UI
+	ui/TestAnchor.cpp
+	ui/TestWidgetState.cpp
+	ui/TestHudLayout.cpp
+	ui/TestButton.cpp
+	ui/TestTheme.cpp
+
+	# DxLib (TypeConvert only - DxLib.h not required)
+	dxlib/TestDxLibTypeConvert.cpp
 
 	# Benchmarks
 	bench/BenchmarkMath.cpp
@@ -117,3 +136,15 @@ list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 include(CTest)
 include(Catch)
 catch_discover_tests(sgc_tests)
+
+# DxLib adapter tests (with stub DxLib.h)
+add_executable(sgc_dxlib_adapter_tests
+	dxlib/TestDxLibRenderer.cpp
+	dxlib/TestDxLibInputProvider.cpp
+	dxlib/TestDxLibTextRenderer.cpp
+)
+target_include_directories(sgc_dxlib_adapter_tests BEFORE PRIVATE
+	${CMAKE_CURRENT_SOURCE_DIR}/dxlib/stub
+)
+target_link_libraries(sgc_dxlib_adapter_tests PRIVATE sgc::sgc Catch2::Catch2WithMain)
+catch_discover_tests(sgc_dxlib_adapter_tests)
