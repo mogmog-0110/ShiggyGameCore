@@ -126,3 +126,73 @@ TEST_CASE("Quadtree empty tree query returns empty", "[spatial][quadtree]")
 
 	REQUIRE(qt.size() == 0);
 }
+
+// ── Raycast ─────────────────────────────────────────────
+
+TEST_CASE("Quadtree raycast hits elements", "[spatial][quadtree]")
+{
+	sgc::Quadtreef qt(sgc::AABB2f{{0, 0}, {100, 100}});
+	qt.insert(sgc::AABB2f{{10, 10}, {20, 20}});
+	qt.insert(sgc::AABB2f{{50, 10}, {60, 20}});
+
+	// 左から右へのレイ（y=15）
+	sgc::Ray2f ray{{0, 15}, {1, 0}};
+	auto hits = qt.raycast(ray);
+	REQUIRE(hits.size() == 2);
+	REQUIRE(hits[0].distance <= hits[1].distance);
+}
+
+TEST_CASE("Quadtree raycast misses elements", "[spatial][quadtree]")
+{
+	sgc::Quadtreef qt(sgc::AABB2f{{0, 0}, {100, 100}});
+	qt.insert(sgc::AABB2f{{10, 10}, {20, 20}});
+
+	// 要素の上を通過するレイ
+	sgc::Ray2f ray{{0, 50}, {1, 0}};
+	auto hits = qt.raycast(ray);
+	REQUIRE(hits.empty());
+}
+
+TEST_CASE("Quadtree raycast sorted by distance", "[spatial][quadtree]")
+{
+	sgc::Quadtreef qt(sgc::AABB2f{{0, 0}, {200, 200}});
+	auto h1 = qt.insert(sgc::AABB2f{{80, 0}, {90, 10}});
+	auto h2 = qt.insert(sgc::AABB2f{{10, 0}, {20, 10}});
+
+	sgc::Ray2f ray{{0, 5}, {1, 0}};
+	auto hits = qt.raycast(ray);
+	REQUIRE(hits.size() == 2);
+	REQUIRE(hits[0].handle == h2);  // 近い方が先
+	REQUIRE(hits[1].handle == h1);
+}
+
+// ── k-Nearest ───────────────────────────────────────────
+
+TEST_CASE("Quadtree findKNearest returns k nearest", "[spatial][quadtree]")
+{
+	sgc::Quadtreef qt(sgc::AABB2f{{0, 0}, {100, 100}});
+	qt.insert(sgc::AABB2f{{10, 10}, {12, 12}});   // 距離 ~15.6
+	qt.insert(sgc::AABB2f{{50, 50}, {52, 52}});   // 距離 ~72.1
+	qt.insert(sgc::AABB2f{{80, 80}, {82, 82}});   // 距離 ~114.5
+
+	auto nearest = qt.findKNearest({0, 0}, 2);
+	REQUIRE(nearest.size() == 2);
+	REQUIRE(nearest[0] == 0);  // 最も近い要素
+}
+
+TEST_CASE("Quadtree findKNearest with k > size", "[spatial][quadtree]")
+{
+	sgc::Quadtreef qt(sgc::AABB2f{{0, 0}, {100, 100}});
+	qt.insert(sgc::AABB2f{{10, 10}, {20, 20}});
+	qt.insert(sgc::AABB2f{{50, 50}, {60, 60}});
+
+	auto nearest = qt.findKNearest({0, 0}, 10);
+	REQUIRE(nearest.size() == 2);
+}
+
+TEST_CASE("Quadtree findKNearest empty tree", "[spatial][quadtree]")
+{
+	sgc::Quadtreef qt(sgc::AABB2f{{0, 0}, {100, 100}});
+	auto nearest = qt.findKNearest({50, 50}, 5);
+	REQUIRE(nearest.empty());
+}

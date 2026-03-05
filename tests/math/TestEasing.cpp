@@ -46,3 +46,38 @@ TEST_CASE("Sine easing", "[math][easing]")
 	REQUIRE(sgc::easing::outSine(1.0f) == Catch::Approx(1.0f).margin(1e-6f));
 	REQUIRE(sgc::easing::inOutSine(0.5f) == Catch::Approx(0.5f).margin(1e-6f));
 }
+
+// ── InOut 追加分 ────────────────────────────────────────
+
+TEST_CASE("InOutExpo boundaries", "[math][easing]")
+{
+	REQUIRE(sgc::easing::inOutExpo(0.0f) == Catch::Approx(0.0f));
+	REQUIRE(sgc::easing::inOutExpo(1.0f) == Catch::Approx(1.0f));
+	REQUIRE(sgc::easing::inOutExpo(0.5f) == Catch::Approx(0.5f).margin(0.01f));
+}
+
+TEST_CASE("InOutCirc boundaries", "[math][easing]")
+{
+	REQUIRE(sgc::easing::inOutCirc(0.0f) == Catch::Approx(0.0f).margin(1e-5f));
+	REQUIRE(sgc::easing::inOutCirc(1.0f) == Catch::Approx(1.0f).margin(1e-5f));
+	REQUIRE(sgc::easing::inOutCirc(0.5f) == Catch::Approx(0.5f).margin(0.01f));
+}
+
+TEST_CASE("InOutElastic boundaries", "[math][easing]")
+{
+	REQUIRE(sgc::easing::inOutElastic(0.0f) == Catch::Approx(0.0f));
+	REQUIRE(sgc::easing::inOutElastic(1.0f) == Catch::Approx(1.0f));
+}
+
+TEST_CASE("InOutBack boundaries", "[math][easing]")
+{
+	REQUIRE(sgc::easing::inOutBack(0.0f) == Catch::Approx(0.0f).margin(1e-5f));
+	REQUIRE(sgc::easing::inOutBack(1.0f) == Catch::Approx(1.0f).margin(1e-5f));
+}
+
+TEST_CASE("InOutBounce boundaries", "[math][easing]")
+{
+	REQUIRE(sgc::easing::inOutBounce(0.0f) == Catch::Approx(0.0f).margin(1e-5f));
+	REQUIRE(sgc::easing::inOutBounce(1.0f) == Catch::Approx(1.0f).margin(1e-5f));
+	REQUIRE(sgc::easing::inOutBounce(0.5f) == Catch::Approx(0.5f).margin(0.01f));
+}

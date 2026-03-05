@@ -5,7 +5,10 @@
 
 #include "sgc/patterns/ServiceLocator.hpp"
 
+#include <atomic>
 #include <string>
+#include <thread>
+#include <vector>
 
 namespace
 {
@@ -58,4 +61,26 @@ TEST_CASE("ServiceLocator clear removes all", "[patterns][service]")
 	locator.clear();
 
 	REQUIRE_FALSE(locator.has<IAudio>());
+}
+
+TEST_CASE("ServiceLocator concurrent access is safe", "[patterns][service]")
+{
+	sgc::ServiceLocator locator;
+	locator.provide<IAudio>(std::make_shared<MockAudio>());
+
+	std::atomic<int> failCount{0};
+	std::vector<std::thread> threads;
+	for (int i = 0; i < 8; ++i)
+	{
+		threads.emplace_back([&locator, &failCount]()
+		{
+			for (int j = 0; j < 100; ++j)
+			{
+				if (!locator.has<IAudio>()) failCount.fetch_add(1);
+				if (locator.get<IAudio>().name() != "MockAudio") failCount.fetch_add(1);
+			}
+		});
+	}
+	for (auto& t : threads) t.join();
+	REQUIRE(failCount.load() == 0);
 }

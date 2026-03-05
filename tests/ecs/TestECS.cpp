@@ -383,3 +383,99 @@ TEST_CASE("View isValid returns false when storage missing", "[ecs][view]")
 	view.each([&count](Position&, Health&) { ++count; });
 	REQUIRE(count == 0);
 }
+
+// ── Tags ────────────────────────────────────────────────────────
+
+TEST_CASE("World setTag and getTag", "[ecs][tag]")
+{
+	sgc::ecs::World world;
+	auto e = world.createEntity();
+	REQUIRE(world.getTag(e) == 0);
+
+	world.setTag(e, 42);
+	REQUIRE(world.getTag(e) == 42);
+}
+
+TEST_CASE("World findByTag returns matching entities", "[ecs][tag]")
+{
+	sgc::ecs::World world;
+	auto e1 = world.createEntity();
+	auto e2 = world.createEntity();
+	auto e3 = world.createEntity();
+
+	world.setTag(e1, 100);
+	world.setTag(e2, 200);
+	world.setTag(e3, 100);
+
+	auto found = world.findByTag(100);
+	REQUIRE(found.size() == 2);
+
+	auto found200 = world.findByTag(200);
+	REQUIRE(found200.size() == 1);
+	REQUIRE(found200[0] == e2);
+}
+
+TEST_CASE("World destroyEntity removes tag", "[ecs][tag]")
+{
+	sgc::ecs::World world;
+	auto e = world.createEntity();
+	world.setTag(e, 42);
+	world.destroyEntity(e);
+
+	auto found = world.findByTag(42);
+	REQUIRE(found.empty());
+}
+
+TEST_CASE("World getTag returns 0 for dead entity", "[ecs][tag]")
+{
+	sgc::ecs::World world;
+	auto e = world.createEntity();
+	world.setTag(e, 42);
+	world.destroyEntity(e);
+	REQUIRE(world.getTag(e) == 0);
+}
+
+// ── EventDispatcher連携 ─────────────────────────────────────────
+
+TEST_CASE("World fires ComponentAdded event", "[ecs][event]")
+{
+	sgc::EventDispatcher dispatcher;
+	sgc::ecs::World world;
+	world.setEventDispatcher(&dispatcher);
+
+	int addedCount = 0;
+	dispatcher.on<sgc::ecs::ComponentAdded<Position>>(
+		[&](const sgc::ecs::ComponentAdded<Position>&) { ++addedCount; });
+
+	auto e = world.createEntity();
+	world.addComponent(e, Position{1.0f, 2.0f});
+
+	REQUIRE(addedCount == 1);
+}
+
+TEST_CASE("World fires ComponentRemoved event", "[ecs][event]")
+{
+	sgc::EventDispatcher dispatcher;
+	sgc::ecs::World world;
+	world.setEventDispatcher(&dispatcher);
+
+	int removedCount = 0;
+	dispatcher.on<sgc::ecs::ComponentRemoved<Position>>(
+		[&](const sgc::ecs::ComponentRemoved<Position>&) { ++removedCount; });
+
+	auto e = world.createEntity();
+	world.addComponent(e, Position{1.0f, 2.0f});
+	world.removeComponent<Position>(e);
+
+	REQUIRE(removedCount == 1);
+}
+
+TEST_CASE("World no event without dispatcher", "[ecs][event]")
+{
+	sgc::ecs::World world;
+	auto e = world.createEntity();
+	// イベントディスパッチャーなしでもクラッシュしない
+	world.addComponent(e, Position{1.0f, 2.0f});
+	world.removeComponent<Position>(e);
+	REQUIRE_FALSE(world.hasComponent<Position>(e));
+}

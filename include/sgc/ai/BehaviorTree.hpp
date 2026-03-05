@@ -7,10 +7,13 @@
 /// Blackboardによるデータ共有、Composite/Decorator/Leafノード、
 /// fluent APIのBuilderを提供する。
 
+#include <algorithm>
 #include <any>
 #include <functional>
 #include <memory>
+#include <numeric>
 #include <optional>
+#include <random>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -104,6 +107,17 @@ public:
 	/// @param bb ブラックボード
 	/// @return 実行結果
 	[[nodiscard]] virtual Status tick(Blackboard& bb) = 0;
+
+	/// @brief デバッグ用の名前を設定する
+	/// @param name ノード名
+	void setName(std::string name) { m_name = std::move(name); }
+
+	/// @brief デバッグ用の名前を取得する
+	/// @return ノード名
+	[[nodiscard]] const std::string& name() const noexcept { return m_name; }
+
+private:
+	std::string m_name;  ///< デバッグ用ノード名
 };
 
 // ── Composite ─────────────────────────────────────────────────
@@ -162,6 +176,99 @@ public:
 
 private:
 	std::vector<std::unique_ptr<Node>> m_children;
+};
+
+/// @brief 並列実行ポリシー
+enum class ParallelPolicy
+{
+	RequireAll,  ///< 全子ノード成功で成功
+	RequireOne   ///< 1つでも成功で成功
+};
+
+/// @brief Parallelノード — 全子ノードを実行する
+///
+/// RequireAllの場合、1つでもFailureなら即Failure。全Successで成功。
+/// RequireOneの場合、1つでもSuccessなら即Success。全Failureで失敗。
+/// どちらでもなければRunning。
+class Parallel : public Node
+{
+public:
+	/// @param policy 実行ポリシー
+	explicit Parallel(ParallelPolicy policy = ParallelPolicy::RequireAll)
+		: m_policy(policy) {}
+
+	/// @brief 子ノードを追加する
+	/// @param child 子ノード
+	void addChild(std::unique_ptr<Node> child)
+	{
+		m_children.push_back(std::move(child));
+	}
+
+	[[nodiscard]] Status tick(Blackboard& bb) override
+	{
+		int successCount = 0;
+		int failureCount = 0;
+
+		for (auto& child : m_children)
+		{
+			const Status s = child->tick(bb);
+			if (s == Status::Success) ++successCount;
+			else if (s == Status::Failure) ++failureCount;
+		}
+
+		const auto total = static_cast<int>(m_children.size());
+
+		if (m_policy == ParallelPolicy::RequireAll)
+		{
+			if (failureCount > 0) return Status::Failure;
+			if (successCount == total) return Status::Success;
+			return Status::Running;
+		}
+		else
+		{
+			if (successCount > 0) return Status::Success;
+			if (failureCount == total) return Status::Failure;
+			return Status::Running;
+		}
+	}
+
+private:
+	std::vector<std::unique_ptr<Node>> m_children;
+	ParallelPolicy m_policy;
+};
+
+/// @brief RandomSelectorノード — 子ノードをランダム順に試行する
+///
+/// Selectorと同様だが、試行順序が毎回ランダムになる。
+/// AI行動のバリエーションを出すのに有用。
+class RandomSelector : public Node
+{
+public:
+	/// @brief 子ノードを追加する
+	/// @param child 子ノード
+	void addChild(std::unique_ptr<Node> child)
+	{
+		m_children.push_back(std::move(child));
+	}
+
+	[[nodiscard]] Status tick(Blackboard& bb) override
+	{
+		// インデックスをシャッフルして試行
+		std::vector<std::size_t> indices(m_children.size());
+		std::iota(indices.begin(), indices.end(), std::size_t{0});
+		std::shuffle(indices.begin(), indices.end(), m_rng);
+
+		for (const auto idx : indices)
+		{
+			const Status s = m_children[idx]->tick(bb);
+			if (s != Status::Failure) return s;
+		}
+		return Status::Failure;
+	}
+
+private:
+	std::vector<std::unique_ptr<Node>> m_children;
+	std::mt19937 m_rng{std::random_device{}()};  ///< 乱数エンジン
 };
 
 // ── Decorator ─────────────────────────────────────────────────
@@ -300,6 +407,25 @@ public:
 		return *this;
 	}
 
+	/// @brief Parallelの構築を開始する
+	/// @param policy 並列実行ポリシー
+	Builder& parallel(ParallelPolicy policy = ParallelPolicy::RequireAll)
+	{
+		auto node = std::make_unique<Parallel>(policy);
+		m_stack.push_back({CompositeType::ParallelType, node.get()});
+		m_pending.push_back(std::move(node));
+		return *this;
+	}
+
+	/// @brief RandomSelectorの構築を開始する
+	Builder& randomSelector()
+	{
+		auto node = std::make_unique<RandomSelector>();
+		m_stack.push_back({CompositeType::RandomSelectorType, node.get()});
+		m_pending.push_back(std::move(node));
+		return *this;
+	}
+
 	/// @brief 現在のCompositeを閉じる
 	Builder& end()
 	{
@@ -385,7 +511,7 @@ public:
 	}
 
 private:
-	enum class CompositeType { SequenceType, SelectorType };
+	enum class CompositeType { SequenceType, SelectorType, ParallelType, RandomSelectorType };
 	enum class DecoratorType { None, InverterType, RepeaterType };
 
 	struct StackFrame
@@ -418,13 +544,20 @@ private:
 		if (!m_stack.empty())
 		{
 			const auto& frame = m_stack.back();
-			if (frame.type == CompositeType::SequenceType)
+			switch (frame.type)
 			{
+			case CompositeType::SequenceType:
 				static_cast<Sequence*>(frame.node)->addChild(std::move(node));
-			}
-			else
-			{
+				break;
+			case CompositeType::SelectorType:
 				static_cast<Selector*>(frame.node)->addChild(std::move(node));
+				break;
+			case CompositeType::ParallelType:
+				static_cast<Parallel*>(frame.node)->addChild(std::move(node));
+				break;
+			case CompositeType::RandomSelectorType:
+				static_cast<RandomSelector*>(frame.node)->addChild(std::move(node));
+				break;
 			}
 		}
 		else

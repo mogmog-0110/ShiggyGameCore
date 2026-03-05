@@ -191,3 +191,62 @@ TEST_CASE("Vec2 compound assignment operators", "[math][vec2]")
 	REQUIRE(v.x == Catch::Approx(5.0f));
 	REQUIRE(v.y == Catch::Approx(10.0f));
 }
+
+// ── clamped ─────────────────────────────────────────────
+
+TEST_CASE("Vec2 clamped restricts components", "[math][vec2]")
+{
+	constexpr sgc::Vec2f v{-5.0f, 15.0f};
+	constexpr auto c = v.clamped(sgc::Vec2f{0.0f, 0.0f}, sgc::Vec2f{10.0f, 10.0f});
+	STATIC_REQUIRE(c.x == 0.0f);
+	STATIC_REQUIRE(c.y == 10.0f);
+}
+
+// ── lerp ────────────────────────────────────────────────
+
+TEST_CASE("Vec2 lerp halfway", "[math][vec2]")
+{
+	constexpr sgc::Vec2f a{0.0f, 0.0f};
+	constexpr sgc::Vec2f b{10.0f, 20.0f};
+	constexpr auto mid = a.lerp(b, 0.5f);
+	STATIC_REQUIRE(mid.x == 5.0f);
+	STATIC_REQUIRE(mid.y == 10.0f);
+}
+
+// ── angleTo ─────────────────────────────────────────────
+
+TEST_CASE("Vec2 angleTo returns correct angle", "[math][vec2]")
+{
+	sgc::Vec2f origin{0.0f, 0.0f};
+	sgc::Vec2f target{1.0f, 0.0f};
+	REQUIRE(origin.angleTo(target) == Catch::Approx(0.0f));
+
+	sgc::Vec2f up{0.0f, 1.0f};
+	const float halfPi = 3.14159265f / 2.0f;
+	REQUIRE(origin.angleTo(up) == Catch::Approx(halfPi).margin(1e-5f));
+}
+
+// ── projected ───────────────────────────────────────────
+
+TEST_CASE("Vec2 projected onto axis", "[math][vec2]")
+{
+	sgc::Vec2f v{3.0f, 4.0f};
+	sgc::Vec2f axis{1.0f, 0.0f};
+	auto proj = v.projected(axis);
+	REQUIRE(proj.x == Catch::Approx(3.0f));
+	REQUIRE(proj.y == Catch::Approx(0.0f));
+}
+
+// ── min/max ─────────────────────────────────────────────
+
+TEST_CASE("Vec2 static min and max", "[math][vec2]")
+{
+	constexpr sgc::Vec2f a{1.0f, 5.0f};
+	constexpr sgc::Vec2f b{3.0f, 2.0f};
+	constexpr auto mn = sgc::Vec2f::min(a, b);
+	constexpr auto mx = sgc::Vec2f::max(a, b);
+	STATIC_REQUIRE(mn.x == 1.0f);
+	STATIC_REQUIRE(mn.y == 2.0f);
+	STATIC_REQUIRE(mx.x == 3.0f);
+	STATIC_REQUIRE(mx.y == 5.0f);
+}

@@ -116,6 +116,41 @@ TEST_CASE("Result::andThen short-circuits on error", "[types][result]")
 	REQUIRE(chained.error().message == "fail");
 }
 
+// ── orElse ──────────────────────────────────────────────────────
+
+TEST_CASE("Result::orElse recovers from error", "[types][result]")
+{
+	sgc::Result<int> result{sgc::ERROR_TAG, sgc::Error{"fail"}};
+	auto recovered = result.orElse([](const sgc::Error&) -> sgc::Result<int>
+	{
+		return 42;
+	});
+	REQUIRE(recovered.hasValue());
+	REQUIRE(recovered.value() == 42);
+}
+
+TEST_CASE("Result::orElse passes through success", "[types][result]")
+{
+	sgc::Result<int> result{10};
+	auto same = result.orElse([](const sgc::Error&) -> sgc::Result<int>
+	{
+		return 99;
+	});
+	REQUIRE(same.hasValue());
+	REQUIRE(same.value() == 10);
+}
+
+TEST_CASE("Result::orElse can chain to a different error", "[types][result]")
+{
+	sgc::Result<int> result{sgc::ERROR_TAG, sgc::Error{"original"}};
+	auto chained = result.orElse([](const sgc::Error& e) -> sgc::Result<int>
+	{
+		return {sgc::ERROR_TAG, sgc::Error{"wrapped: " + e.message}};
+	});
+	REQUIRE(chained.hasError());
+	REQUIRE(chained.error().message == "wrapped: original");
+}
+
 // ── カスタムエラー型 ────────────────────────────────────────────
 
 enum class ErrorCode { NotFound, InvalidInput };

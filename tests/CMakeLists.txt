@@ -20,6 +20,12 @@ add_executable(sgc_tests
 	core/TestLogger.cpp
 	core/TestCoroutine.cpp
 	core/TestSerialize.cpp
+	core/TestStringUtils.cpp
+	core/TestHash.cpp
+	core/TestHandle.cpp
+	core/TestRingBuffer.cpp
+	core/TestThreadPool.cpp
+	core/TestProfiler.cpp
 
 	# Types
 	types/TestConcepts.cpp
@@ -45,6 +51,7 @@ add_executable(sgc_tests
 	math/TestFrustum.cpp
 	math/TestIntersection.cpp
 	math/TestNoise.cpp
+	math/TestSimdVec.cpp
 
 	# Patterns
 	patterns/TestEventDispatcher.cpp
@@ -67,10 +74,38 @@ add_executable(sgc_tests
 
 	# ECS
 	ecs/TestECS.cpp
+	ecs/TestSystem.cpp
+	ecs/TestCommandBuffer.cpp
+	ecs/TestViewExclude.cpp
+
+	# Input
+	input/TestActionMap.cpp
+	input/TestInputBuffer.cpp
+
+	# Effects
+	effects/TestParticleSystem.cpp
+
+	# Resource
+	resource/TestResourceManager.cpp
+	resource/TestFileWatcher.cpp
+
+	# Scene
+	scene/TestScene.cpp
+	scene/TestTransform.cpp
+	scene/TestCamera.cpp
+
+	# Net
+	net/TestMessageChannel.cpp
 
 	# Memory
 	memory/TestArenaAllocator.cpp
 	memory/TestPoolAllocator.cpp
+	memory/TestStackAllocator.cpp
+	memory/TestFreeListAllocator.cpp
+
+	# Benchmarks
+	bench/BenchmarkMath.cpp
+	bench/BenchmarkECS.cpp
 )
 
 target_link_libraries(sgc_tests PRIVATE

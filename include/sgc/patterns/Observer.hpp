@@ -1,10 +1,15 @@
 ﻿#pragma once
 
 /// @file Observer.hpp
-/// @brief 軽量Signal/Slotパターン
+/// @brief 軽量Signal/Slotパターン（1:1シグナル通知）
 ///
 /// Qt風のシグナル/スロット機構。EventDispatcherより軽量で、
-/// 特定のイベントに特化した通知に適している。
+/// 特定のイベントに特化した1対1の通知に適している。
+///
+/// @note EventDispatcherとの使い分け:
+///   - Observer (Signal/Slot): 1:1の直接通知。コンポーネント間の直接的な依存関係に使用。
+///   - EventDispatcher: 1:Nのイベントバス（パブリッシュ/サブスクライブ）。
+///     グローバルイベントや疎結合な通知に使用。
 
 #include <cstdint>
 #include <functional>

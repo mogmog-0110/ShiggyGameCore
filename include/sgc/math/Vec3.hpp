@@ -98,6 +98,73 @@ struct Vec3
 		return *this - normal * (T{2} * this->dot(normal));
 	}
 
+	// ── 追加メソッド ────────────────────────────────────────
+
+	/// @brief 各成分を[min, max]にクランプした新しいベクトルを返す
+	[[nodiscard]] constexpr Vec3 clamped(const Vec3& minVal, const Vec3& maxVal) const noexcept
+	{
+		auto clampVal = [](T v, T lo, T hi) constexpr -> T
+		{
+			if (v < lo) return lo;
+			if (v > hi) return hi;
+			return v;
+		};
+		return {clampVal(x, minVal.x, maxVal.x), clampVal(y, minVal.y, maxVal.y), clampVal(z, minVal.z, maxVal.z)};
+	}
+
+	/// @brief 他のベクトルとの線形補間を返す
+	[[nodiscard]] constexpr Vec3 lerp(const Vec3& other, T t) const noexcept
+		requires FloatingPoint<T>
+	{
+		return {x + (other.x - x) * t, y + (other.y - y) * t, z + (other.z - z) * t};
+	}
+
+	/// @brief 他のベクトルへの角度を返す（ラジアン）
+	[[nodiscard]] T angleTo(const Vec3& other) const noexcept
+		requires FloatingPoint<T>
+	{
+		const T d = this->dot(other);
+		const T lenProd = this->length() * other.length();
+		if (lenProd == T{0}) return T{0};
+		// acos引数を[-1,1]にクランプ
+		T cosAngle = d / lenProd;
+		if (cosAngle > T{1}) cosAngle = T{1};
+		if (cosAngle < T{-1}) cosAngle = T{-1};
+		return std::acos(cosAngle);
+	}
+
+	/// @brief このベクトルをontoに射影したベクトルを返す
+	[[nodiscard]] constexpr Vec3 projectOnto(const Vec3& onto) const noexcept
+		requires FloatingPoint<T>
+	{
+		const T d = onto.dot(onto);
+		if (d == T{0}) return {};
+		return onto * (this->dot(onto) / d);
+	}
+
+	/// @brief 指定軸まわりにラジアン回転したベクトルを返す（Rodrigues公式）
+	/// @param axis 回転軸（正規化済み）
+	/// @param radians 回転角度（ラジアン）
+	[[nodiscard]] Vec3 rotateAroundAxis(const Vec3& axis, T radians) const noexcept
+		requires FloatingPoint<T>
+	{
+		const T cosA = std::cos(radians);
+		const T sinA = std::sin(radians);
+		return *this * cosA + axis.cross(*this) * sinA + axis * axis.dot(*this) * (T{1} - cosA);
+	}
+
+	/// @brief 2つのベクトルの各成分の最小値を返す
+	[[nodiscard]] static constexpr Vec3 min(const Vec3& a, const Vec3& b) noexcept
+	{
+		return {(a.x < b.x) ? a.x : b.x, (a.y < b.y) ? a.y : b.y, (a.z < b.z) ? a.z : b.z};
+	}
+
+	/// @brief 2つのベクトルの各成分の最大値を返す
+	[[nodiscard]] static constexpr Vec3 max(const Vec3& a, const Vec3& b) noexcept
+	{
+		return {(a.x > b.x) ? a.x : b.x, (a.y > b.y) ? a.y : b.y, (a.z > b.z) ? a.z : b.z};
+	}
+
 	// ── 定数 ────────────────────────────────────────────────
 
 	[[nodiscard]] static constexpr Vec3 zero() noexcept { return {T{0}, T{0}, T{0}}; }

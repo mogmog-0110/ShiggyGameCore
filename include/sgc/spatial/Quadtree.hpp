@@ -6,8 +6,11 @@
 /// 2Dゲームのブロードフェーズ衝突検出や近傍探索に使用する。
 /// ハンドルベースのAPIで、要素の挿入・削除・更新・クエリを提供する。
 
+#include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
+#include <limits>
 #include <vector>
 
 #include "sgc/math/Geometry.hpp"
@@ -130,6 +133,67 @@ public:
 			}
 		}
 		return results;
+	}
+
+	/// @brief レイキャストヒット情報
+	struct RaycastHit
+	{
+		Handle handle;   ///< ヒットした要素のハンドル
+		T distance;      ///< レイの始点からの距離
+	};
+
+	/// @brief レイキャストを実行する
+	///
+	/// レイと交差する全要素を距離順（近い順）で返す。
+	///
+	/// @param ray レイ（始点と方向）
+	/// @return ヒットリスト（距離ソート済み）
+	[[nodiscard]] std::vector<RaycastHit> raycast(const Ray2<T>& ray) const
+	{
+		std::vector<RaycastHit> results;
+		raycastImpl(0, ray, results);
+		std::sort(results.begin(), results.end(),
+			[](const RaycastHit& a, const RaycastHit& b) { return a.distance < b.distance; });
+		return results;
+	}
+
+	/// @brief k近傍探索を実行する
+	///
+	/// 指定点に最も近いk個の要素を距離順で返す。
+	/// 要素の中心点を基準に距離を計算する。
+	///
+	/// @param point 検索点
+	/// @param k 取得する要素数
+	/// @return ハンドルリスト（距離ソート済み）
+	[[nodiscard]] std::vector<Handle> findKNearest(const Vec2<T>& point, std::size_t k) const
+	{
+		struct DistHandle
+		{
+			T distance;
+			Handle handle;
+		};
+
+		std::vector<DistHandle> all;
+		all.reserve(m_elements.size());
+		for (std::size_t i = 0; i < m_elements.size(); ++i)
+		{
+			if (!m_elements[i].active) continue;
+			const auto center = m_elements[i].bounds.center();
+			const T dist = (center - point).length();
+			all.push_back({dist, i});
+		}
+
+		const auto count = std::min(k, all.size());
+		std::partial_sort(all.begin(), all.begin() + static_cast<std::ptrdiff_t>(count), all.end(),
+			[](const DistHandle& a, const DistHandle& b) { return a.distance < b.distance; });
+
+		std::vector<Handle> result;
+		result.reserve(count);
+		for (std::size_t i = 0; i < count; ++i)
+		{
+			result.push_back(all[i].handle);
+		}
+		return result;
 	}
 
 	/// @brief 全要素を削除する
@@ -269,6 +333,77 @@ private:
 			if (!placed)
 			{
 				m_nodes[nodeIdx].elements.push_back(h);
+			}
+		}
+	}
+
+	/// @brief レイとAABB2の交差判定（スラブ法）
+	/// @return 交差する場合true、tMinに交差距離を格納
+	[[nodiscard]] static bool rayIntersectsAABB2(const Ray2<T>& ray, const AABB2<T>& aabb, T& tMin)
+	{
+		T tNear = -std::numeric_limits<T>::infinity();
+		T tFar = std::numeric_limits<T>::infinity();
+
+		// X軸
+		if (std::abs(ray.direction.x) < std::numeric_limits<T>::epsilon())
+		{
+			if (ray.origin.x < aabb.min.x || ray.origin.x > aabb.max.x) return false;
+		}
+		else
+		{
+			T t1 = (aabb.min.x - ray.origin.x) / ray.direction.x;
+			T t2 = (aabb.max.x - ray.origin.x) / ray.direction.x;
+			if (t1 > t2) std::swap(t1, t2);
+			tNear = std::max(tNear, t1);
+			tFar = std::min(tFar, t2);
+			if (tNear > tFar || tFar < T{0}) return false;
+		}
+
+		// Y軸
+		if (std::abs(ray.direction.y) < std::numeric_limits<T>::epsilon())
+		{
+			if (ray.origin.y < aabb.min.y || ray.origin.y > aabb.max.y) return false;
+		}
+		else
+		{
+			T t1 = (aabb.min.y - ray.origin.y) / ray.direction.y;
+			T t2 = (aabb.max.y - ray.origin.y) / ray.direction.y;
+			if (t1 > t2) std::swap(t1, t2);
+			tNear = std::max(tNear, t1);
+			tFar = std::min(tFar, t2);
+			if (tNear > tFar || tFar < T{0}) return false;
+		}
+
+		tMin = std::max(tNear, T{0});
+		return true;
+	}
+
+	/// @brief レイキャストの再帰実装
+	void raycastImpl(int nodeIdx, const Ray2<T>& ray, std::vector<RaycastHit>& results) const
+	{
+		T tNode{};
+		if (!rayIntersectsAABB2(ray, m_nodes[nodeIdx].bounds, tNode)) return;
+
+		// このノードの要素をチェック
+		for (const auto h : m_nodes[nodeIdx].elements)
+		{
+			if (!m_elements[h].active) continue;
+			T t{};
+			if (rayIntersectsAABB2(ray, m_elements[h].bounds, t))
+			{
+				results.push_back({h, t});
+			}
+		}
+
+		// 子ノードを再帰チェック
+		if (!m_nodes[nodeIdx].isLeaf())
+		{
+			for (int i = 0; i < 4; ++i)
+			{
+				if (m_nodes[nodeIdx].children[i] != -1)
+				{
+					raycastImpl(m_nodes[nodeIdx].children[i], ray, results);
+				}
 			}
 		}
 	}

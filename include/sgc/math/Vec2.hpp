@@ -150,6 +150,65 @@ struct Vec2
 		return {x * c - y * s, x * s + y * c};
 	}
 
+	// ── 追加メソッド ────────────────────────────────────────
+
+	/// @brief 各成分を[min, max]にクランプした新しいベクトルを返す
+	/// @param minVal 最小値
+	/// @param maxVal 最大値
+	/// @return クランプ後のベクトル
+	[[nodiscard]] constexpr Vec2 clamped(const Vec2& minVal, const Vec2& maxVal) const noexcept
+	{
+		auto clampVal = [](T v, T lo, T hi) constexpr -> T
+		{
+			if (v < lo) return lo;
+			if (v > hi) return hi;
+			return v;
+		};
+		return {clampVal(x, minVal.x, maxVal.x), clampVal(y, minVal.y, maxVal.y)};
+	}
+
+	/// @brief 他のベクトルとの線形補間を返す
+	/// @param other 補間先
+	/// @param t 補間係数 [0, 1]
+	/// @return 補間結果
+	[[nodiscard]] constexpr Vec2 lerp(const Vec2& other, T t) const noexcept
+		requires FloatingPoint<T>
+	{
+		return {x + (other.x - x) * t, y + (other.y - y) * t};
+	}
+
+	/// @brief 他のベクトルへの角度を返す（ラジアン）
+	/// @param other 対象ベクトル
+	/// @return 角度（ラジアン）
+	[[nodiscard]] T angleTo(const Vec2& other) const noexcept
+		requires FloatingPoint<T>
+	{
+		return std::atan2(other.y - y, other.x - x);
+	}
+
+	/// @brief このベクトルをontoに射影したベクトルを返す
+	/// @param onto 射影先のベクトル
+	/// @return 射影ベクトル
+	[[nodiscard]] constexpr Vec2 projected(const Vec2& onto) const noexcept
+		requires FloatingPoint<T>
+	{
+		const T d = onto.dot(onto);
+		if (d == T{0}) return {};
+		return onto * (this->dot(onto) / d);
+	}
+
+	/// @brief 2つのベクトルの各成分の最小値を返す
+	[[nodiscard]] static constexpr Vec2 min(const Vec2& a, const Vec2& b) noexcept
+	{
+		return {(a.x < b.x) ? a.x : b.x, (a.y < b.y) ? a.y : b.y};
+	}
+
+	/// @brief 2つのベクトルの各成分の最大値を返す
+	[[nodiscard]] static constexpr Vec2 max(const Vec2& a, const Vec2& b) noexcept
+	{
+		return {(a.x > b.x) ? a.x : b.x, (a.y > b.y) ? a.y : b.y};
+	}
+
 	// ── 定数 ────────────────────────────────────────────────
 
 	/// @brief ゼロベクトル (0, 0)

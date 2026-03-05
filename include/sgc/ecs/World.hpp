@@ -18,6 +18,7 @@
 /// });
 /// @endcode
 
+#include <cstdint>
 #include <memory>
 #include <tuple>
 #include <unordered_map>
@@ -27,9 +28,26 @@
 #include "sgc/ecs/ComponentStorage.hpp"
 #include "sgc/ecs/Entity.hpp"
 #include "sgc/ecs/View.hpp"
+#include "sgc/patterns/EventDispatcher.hpp"
 
 namespace sgc::ecs
 {
+
+/// @brief コンポーネント追加イベント
+/// @tparam T コンポーネント型
+template <typename T>
+struct ComponentAdded
+{
+	Entity entity;  ///< 対象エンティティ
+};
+
+/// @brief コンポーネント削除イベント
+/// @tparam T コンポーネント型
+template <typename T>
+struct ComponentRemoved
+{
+	Entity entity;  ///< 対象エンティティ
+};
 
 /// @brief コンポーネントストレージの基底インターフェース（型消去用）
 class IComponentStorage
@@ -116,6 +134,9 @@ public:
 			storage->removeEntity(entity.id);
 		}
 
+		// タグを削除
+		m_tags.erase(entity.id);
+
 		// 世代をインクリメントしてIDを再利用可能にする
 		++m_generations[entity.id];
 		m_freeIds.push_back(entity.id);
@@ -140,6 +161,10 @@ public:
 	{
 		if (!isAlive(entity)) return;
 		getOrCreateStorage<T>().add(entity.id, std::move(component));
+		if (m_eventDispatcher)
+		{
+			m_eventDispatcher->emit(ComponentAdded<T>{entity});
+		}
 	}
 
 	/// @brief エンティティのコンポーネントを取得する
@@ -176,7 +201,14 @@ public:
 	{
 		if (!isAlive(entity)) return;
 		auto* typed = findStorage<T>();
-		if (typed) typed->storage().remove(entity.id);
+		if (typed)
+		{
+			typed->storage().remove(entity.id);
+			if (m_eventDispatcher)
+			{
+				m_eventDispatcher->emit(ComponentRemoved<T>{entity});
+			}
+		}
 	}
 
 	/// @brief エンティティがコンポーネントを持つか確認する
@@ -262,6 +294,83 @@ public:
 		return View<Components...>(storages, m_generations);
 	}
 
+	/// @brief 除外フィルタ付きクエリビューを作成する
+	///
+	/// 指定した除外コンポーネントを持つエンティティをスキップする。
+	///
+	/// @tparam Components 必須コンポーネント型
+	/// @tparam Excludes 除外コンポーネント型
+	/// @param 除外マーカー（型推論用）
+	/// @return ExcludeView オブジェクト
+	///
+	/// @code
+	/// auto view = world.viewExclude<Position, Velocity>(Exclude<Dead>{});
+	/// view.each([](Position& pos, Velocity& vel) {
+	///     pos.x += vel.dx;
+	/// });
+	/// @endcode
+	template <typename... Components, typename... Excludes>
+	[[nodiscard]] auto viewExclude(Exclude<Excludes...>)
+	{
+		auto includeStorages = std::make_tuple(findStorage<Components>()...);
+		auto excludeStorages = std::make_tuple(findStorage<Excludes>()...);
+		return ExcludeView<std::tuple<Components...>, std::tuple<Excludes...>>(
+			includeStorages, excludeStorages, m_generations);
+	}
+
+	// ── タグ ────────────────────────────────────────────────
+
+	/// @brief エンティティにタグを設定する
+	///
+	/// Hash.hppの `"player"_hash` と組み合わせて使用することを推奨。
+	///
+	/// @param entity 対象エンティティ
+	/// @param tag タグ値（0はタグなしを意味する）
+	void setTag(Entity entity, std::uint64_t tag)
+	{
+		if (!isAlive(entity)) return;
+		m_tags[entity.id] = tag;
+	}
+
+	/// @brief エンティティのタグを取得する
+	/// @param entity 対象エンティティ
+	/// @return タグ値（未設定の場合は0）
+	[[nodiscard]] std::uint64_t getTag(Entity entity) const
+	{
+		if (!isAlive(entity)) return 0;
+		const auto it = m_tags.find(entity.id);
+		return (it != m_tags.end()) ? it->second : 0;
+	}
+
+	/// @brief 指定タグを持つエンティティを検索する
+	/// @param tag 検索するタグ値
+	/// @return 一致するエンティティのリスト
+	[[nodiscard]] std::vector<Entity> findByTag(std::uint64_t tag) const
+	{
+		std::vector<Entity> result;
+		for (const auto& [id, t] : m_tags)
+		{
+			if (t == tag && id < m_generations.size())
+			{
+				result.push_back(Entity{id, m_generations[id]});
+			}
+		}
+		return result;
+	}
+
+	// ── EventDispatcher連携 ─────────────────────────────────
+
+	/// @brief EventDispatcherを設定する
+	///
+	/// 設定すると、addComponent/removeComponent時に
+	/// ComponentAdded<T>/ComponentRemoved<T>イベントが発火される。
+	///
+	/// @param dispatcher EventDispatcherへのポインタ（nullptrで無効化）
+	void setEventDispatcher(sgc::EventDispatcher* dispatcher) noexcept
+	{
+		m_eventDispatcher = dispatcher;
+	}
+
 	/// @brief 生存エンティティ数
 	/// @return エンティティ数
 	[[nodiscard]] std::size_t entityCount() const noexcept
@@ -277,6 +386,9 @@ private:
 
 	/// @brief 型ID → コンポーネントストレージ
 	std::unordered_map<TypeIdValue, std::unique_ptr<IComponentStorage>> m_storages;
+
+	std::unordered_map<EntityId, std::uint64_t> m_tags;  ///< エンティティタグ
+	sgc::EventDispatcher* m_eventDispatcher{nullptr};    ///< イベントディスパッチャー（オプション）
 
 	/// @brief 型Tのストレージを取得または作成する
 	template <typename T>

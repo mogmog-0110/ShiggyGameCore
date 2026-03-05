@@ -107,3 +107,72 @@ TEST_CASE("Octree empty tree query returns empty", "[spatial][octree]")
 
 	REQUIRE(ot.size() == 0);
 }
+
+// ── Raycast ─────────────────────────────────────────────
+
+TEST_CASE("Octree raycast hits elements", "[spatial][octree]")
+{
+	sgc::Octreef ot(sgc::AABB3f{{0, 0, 0}, {100, 100, 100}});
+	ot.insert(sgc::AABB3f{{10, 10, 10}, {20, 20, 20}});
+	ot.insert(sgc::AABB3f{{50, 10, 10}, {60, 20, 20}});
+
+	// x方向へのレイ（y=15, z=15）
+	sgc::Ray3f ray{{0, 15, 15}, {1, 0, 0}};
+	auto hits = ot.raycast(ray);
+	REQUIRE(hits.size() == 2);
+	REQUIRE(hits[0].distance <= hits[1].distance);
+}
+
+TEST_CASE("Octree raycast misses elements", "[spatial][octree]")
+{
+	sgc::Octreef ot(sgc::AABB3f{{0, 0, 0}, {100, 100, 100}});
+	ot.insert(sgc::AABB3f{{10, 10, 10}, {20, 20, 20}});
+
+	// 要素の上を通過するレイ
+	sgc::Ray3f ray{{0, 50, 50}, {1, 0, 0}};
+	auto hits = ot.raycast(ray);
+	REQUIRE(hits.empty());
+}
+
+TEST_CASE("Octree raycast sorted by distance", "[spatial][octree]")
+{
+	sgc::Octreef ot(sgc::AABB3f{{0, 0, 0}, {200, 200, 200}});
+	auto h1 = ot.insert(sgc::AABB3f{{80, 0, 0}, {90, 10, 10}});
+	auto h2 = ot.insert(sgc::AABB3f{{10, 0, 0}, {20, 10, 10}});
+
+	sgc::Ray3f ray{{0, 5, 5}, {1, 0, 0}};
+	auto hits = ot.raycast(ray);
+	REQUIRE(hits.size() == 2);
+	REQUIRE(hits[0].handle == h2);
+	REQUIRE(hits[1].handle == h1);
+}
+
+// ── k-Nearest ───────────────────────────────────────────
+
+TEST_CASE("Octree findKNearest returns k nearest", "[spatial][octree]")
+{
+	sgc::Octreef ot(sgc::AABB3f{{0, 0, 0}, {100, 100, 100}});
+	ot.insert(sgc::AABB3f{{10, 10, 10}, {12, 12, 12}});   // 近い
+	ot.insert(sgc::AABB3f{{50, 50, 50}, {52, 52, 52}});   // 中間
+	ot.insert(sgc::AABB3f{{80, 80, 80}, {82, 82, 82}});   // 遠い
+
+	auto nearest = ot.findKNearest({0, 0, 0}, 2);
+	REQUIRE(nearest.size() == 2);
+	REQUIRE(nearest[0] == 0);  // 最も近い要素
+}
+
+TEST_CASE("Octree findKNearest with k > size", "[spatial][octree]")
+{
+	sgc::Octreef ot(sgc::AABB3f{{0, 0, 0}, {100, 100, 100}});
+	ot.insert(sgc::AABB3f{{10, 10, 10}, {20, 20, 20}});
+
+	auto nearest = ot.findKNearest({0, 0, 0}, 10);
+	REQUIRE(nearest.size() == 1);
+}
+
+TEST_CASE("Octree findKNearest empty tree", "[spatial][octree]")
+{
+	sgc::Octreef ot(sgc::AABB3f{{0, 0, 0}, {100, 100, 100}});
+	auto nearest = ot.findKNearest({50, 50, 50}, 5);
+	REQUIRE(nearest.empty());
+}

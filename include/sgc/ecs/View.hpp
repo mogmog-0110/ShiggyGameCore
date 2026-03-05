@@ -5,6 +5,7 @@
 ///
 /// ストレージポインタをキャッシュし、繰り返しのクエリを高速化する。
 /// World::view<Components...>() で生成する。
+/// Exclude<Types...> で除外フィルタを指定できる。
 ///
 /// @note シングルスレッド前提。マルチスレッドでの使用は未サポート。
 ///
@@ -13,6 +14,12 @@
 /// view.each([](Position& pos, Velocity& vel) {
 ///     pos.x += vel.dx;
 ///     pos.y += vel.dy;
+/// });
+///
+/// // 除外フィルタ付き
+/// auto view2 = world.viewExclude<Position, Velocity>(sgc::ecs::Exclude<Dead>{});
+/// view2.each([](Position& pos, Velocity& vel) {
+///     pos.x += vel.dx;
 /// });
 /// @endcode
 
@@ -29,6 +36,11 @@ namespace sgc::ecs
 // 前方宣言
 template <typename T>
 class TypedStorage;
+
+/// @brief 除外コンポーネントマーカー
+/// @tparam Ts 除外するコンポーネント型
+template <typename... Ts>
+struct Exclude {};
 
 /// @brief 再利用可能なECSクエリビュー
 ///
@@ -106,6 +118,98 @@ private:
 			if (!storage->storage().has(id)) return false;
 			return hasAllComponents<I + 1>(id);
 		}
+	}
+};
+
+/// @brief 除外フィルタ付きECSクエリビュー
+///
+/// View と同様に動作するが、除外コンポーネントを持つエンティティをスキップする。
+///
+/// @tparam IncludeComponents 必須コンポーネント型
+/// @tparam ExcludeComponents 除外コンポーネント型
+template <typename IncludeList, typename ExcludeList>
+class ExcludeView;
+
+template <typename... Includes, typename... Excludes>
+class ExcludeView<std::tuple<Includes...>, std::tuple<Excludes...>>
+{
+public:
+	/// @brief ビューを構築する
+	explicit ExcludeView(
+		std::tuple<TypedStorage<Includes>*...> includeStorages,
+		std::tuple<TypedStorage<Excludes>*...> excludeStorages,
+		const std::vector<Generation>& generations)
+		: m_includeStorages(includeStorages)
+		, m_excludeStorages(excludeStorages)
+		, m_generations(generations)
+	{
+	}
+
+	/// @brief 条件に合うエンティティに対して関数を実行する
+	/// @tparam Func コールバック型 (Includes&...)
+	/// @param func コールバック関数
+	template <typename Func>
+	void each(Func&& func)
+	{
+		if (!isValid()) return;
+
+		auto* firstStorage = std::get<0>(m_includeStorages);
+		const auto& entities = firstStorage->storage().entities();
+
+		for (std::size_t i = 0; i < entities.size(); ++i)
+		{
+			const EntityId id = entities[i];
+			if (id >= m_generations.size()) continue;
+
+			// 必須コンポーネントの存在確認
+			if (!hasAllIncludes<1>(id)) continue;
+
+			// 除外コンポーネントの非存在確認
+			if (hasAnyExclude(id)) continue;
+
+			func(*std::get<TypedStorage<Includes>*>(m_includeStorages)->storage().get(id)...);
+		}
+	}
+
+	/// @brief ビューが有効か
+	[[nodiscard]] bool isValid() const noexcept
+	{
+		return (std::get<TypedStorage<Includes>*>(m_includeStorages) && ...);
+	}
+
+private:
+	std::tuple<TypedStorage<Includes>*...> m_includeStorages;
+	std::tuple<TypedStorage<Excludes>*...> m_excludeStorages;
+	const std::vector<Generation>& m_generations;
+
+	/// @brief 必須コンポーネントの存在確認
+	template <std::size_t I>
+	[[nodiscard]] bool hasAllIncludes(EntityId id) const
+	{
+		if constexpr (I >= sizeof...(Includes))
+		{
+			return true;
+		}
+		else
+		{
+			auto* storage = std::get<I>(m_includeStorages);
+			if (!storage->storage().has(id)) return false;
+			return hasAllIncludes<I + 1>(id);
+		}
+	}
+
+	/// @brief 除外コンポーネントのいずれかを持つか確認
+	[[nodiscard]] bool hasAnyExclude(EntityId id) const
+	{
+		return (hasExcludeComponent<Excludes>(id) || ...);
+	}
+
+	/// @brief 特定の除外コンポーネントを持つか
+	template <typename E>
+	[[nodiscard]] bool hasExcludeComponent(EntityId id) const
+	{
+		auto* storage = std::get<TypedStorage<E>*>(m_excludeStorages);
+		return storage && storage->storage().has(id);
 	}
 };
 

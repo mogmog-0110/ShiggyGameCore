@@ -272,6 +272,39 @@ public:
 		return std::invoke_result_t<F, const T&>{ERROR_TAG, error()};
 	}
 
+	/// @brief エラー値に対してResultを返す関数を連鎖する（エラー回復チェーン）
+	///
+	/// エラー状態の場合、funcを適用して新しいResultを返す。
+	/// 成功状態の場合、成功値をそのまま伝播する。
+	/// andThen() の対になるメソッドで、エラーからの回復パスを構築できる。
+	///
+	/// @tparam F 回復関数の型（const E& -> Result<T, E2>）
+	/// @param func エラー値を受け取りResultを返す関数
+	/// @return funcの戻り値、または成功値を伝播したResult
+	///
+	/// @code
+	/// auto loadConfig = [](const std::string& path) -> sgc::Result<Config>
+	/// {
+	///     // ファイル読み込み
+	/// };
+	/// auto useDefault = [](const sgc::Error&) -> sgc::Result<Config>
+	/// {
+	///     return Config::defaultConfig();
+	/// };
+	/// auto config = loadConfig("app.json").orElse(useDefault);
+	/// @endcode
+	template <typename F>
+		requires std::invocable<F, const E&>
+	[[nodiscard]] constexpr auto orElse(F&& func) const&
+		-> std::invoke_result_t<F, const E&>
+	{
+		if (hasError())
+		{
+			return std::invoke(std::forward<F>(func), error());
+		}
+		return std::invoke_result_t<F, const E&>{value()};
+	}
+
 private:
 	std::variant<T, E> m_storage;  ///< 成功値またはエラー値を保持する内部ストレージ
 };

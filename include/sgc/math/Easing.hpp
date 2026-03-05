@@ -226,5 +226,69 @@ template <FloatingPoint T>
 	return T{1} - outBounce(T{1} - t);
 }
 
+// ── InOut 追加 ─────────────────────────────────────────────────
+
+/// @brief 指数関数（加速→減速）
+template <FloatingPoint T>
+[[nodiscard]] T inOutExpo(T t) noexcept
+{
+	if (t == T{0} || t == T{1}) return t;
+	if (t < T{0.5})
+	{
+		return std::pow(T{2}, T{20} * t - T{10}) / T{2};
+	}
+	return (T{2} - std::pow(T{2}, T{-20} * t + T{10})) / T{2};
+}
+
+/// @brief 円弧（加速→減速）
+template <FloatingPoint T>
+[[nodiscard]] T inOutCirc(T t) noexcept
+{
+	if (t < T{0.5})
+	{
+		return (T{1} - std::sqrt(T{1} - T{4} * t * t)) / T{2};
+	}
+	const T u = T{-2} * t + T{2};
+	return (std::sqrt(T{1} - u * u) + T{1}) / T{2};
+}
+
+/// @brief 弾性（加速→減速）
+template <FloatingPoint T>
+[[nodiscard]] T inOutElastic(T t) noexcept
+{
+	if (t == T{0} || t == T{1}) return t;
+	constexpr T c = T{2} * std::numbers::pi_v<T> / T{4.5};
+	if (t < T{0.5})
+	{
+		return -(std::pow(T{2}, T{20} * t - T{10}) * std::sin((T{20} * t - T{11.125}) * c)) / T{2};
+	}
+	return (std::pow(T{2}, T{-20} * t + T{10}) * std::sin((T{20} * t - T{11.125}) * c)) / T{2} + T{1};
+}
+
+/// @brief 引き戻し（加速→減速）
+template <FloatingPoint T>
+[[nodiscard]] constexpr T inOutBack(T t) noexcept
+{
+	constexpr T c1 = T{1.70158};
+	constexpr T c2 = c1 * T{1.525};
+	if (t < T{0.5})
+	{
+		return (T{4} * t * t * ((c2 + T{1}) * T{2} * t - c2)) / T{2};
+	}
+	const T u = T{2} * t - T{2};
+	return (u * u * ((c2 + T{1}) * u + c2) + T{2}) / T{2};
+}
+
+/// @brief バウンス（加速→減速）
+template <FloatingPoint T>
+[[nodiscard]] constexpr T inOutBounce(T t) noexcept
+{
+	if (t < T{0.5})
+	{
+		return (T{1} - outBounce(T{1} - T{2} * t)) / T{2};
+	}
+	return (T{1} + outBounce(T{2} * t - T{1})) / T{2};
+}
+
 } // namespace easing
 } // namespace sgc

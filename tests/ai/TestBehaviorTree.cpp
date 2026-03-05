@@ -288,3 +288,116 @@ TEST_CASE("Repeater returns Running when child returns Running", "[ai][bt]")
 	REQUIRE(rep.tick(bb) == Status::Running);
 	REQUIRE(callCount == 1); // Running時点で中断
 }
+
+// ── Node name ─────────────────────────────────────────────
+
+TEST_CASE("Node name for debugging", "[ai][bt]")
+{
+	Action act([](Blackboard&) { return Status::Success; });
+	REQUIRE(act.name().empty());
+
+	act.setName("Attack");
+	REQUIRE(act.name() == "Attack");
+}
+
+// ── Parallel ──────────────────────────────────────────────
+
+TEST_CASE("Parallel RequireAll succeeds when all succeed", "[ai][bt]")
+{
+	Blackboard bb;
+	Parallel par(ParallelPolicy::RequireAll);
+	par.addChild(std::make_unique<Action>([](Blackboard&) { return Status::Success; }));
+	par.addChild(std::make_unique<Action>([](Blackboard&) { return Status::Success; }));
+
+	REQUIRE(par.tick(bb) == Status::Success);
+}
+
+TEST_CASE("Parallel RequireAll fails when any fails", "[ai][bt]")
+{
+	Blackboard bb;
+	Parallel par(ParallelPolicy::RequireAll);
+	par.addChild(std::make_unique<Action>([](Blackboard&) { return Status::Success; }));
+	par.addChild(std::make_unique<Action>([](Blackboard&) { return Status::Failure; }));
+
+	REQUIRE(par.tick(bb) == Status::Failure);
+}
+
+TEST_CASE("Parallel RequireOne succeeds when any succeeds", "[ai][bt]")
+{
+	Blackboard bb;
+	Parallel par(ParallelPolicy::RequireOne);
+	par.addChild(std::make_unique<Action>([](Blackboard&) { return Status::Failure; }));
+	par.addChild(std::make_unique<Action>([](Blackboard&) { return Status::Success; }));
+
+	REQUIRE(par.tick(bb) == Status::Success);
+}
+
+TEST_CASE("Parallel RequireOne fails when all fail", "[ai][bt]")
+{
+	Blackboard bb;
+	Parallel par(ParallelPolicy::RequireOne);
+	par.addChild(std::make_unique<Action>([](Blackboard&) { return Status::Failure; }));
+	par.addChild(std::make_unique<Action>([](Blackboard&) { return Status::Failure; }));
+
+	REQUIRE(par.tick(bb) == Status::Failure);
+}
+
+// ── RandomSelector ────────────────────────────────────────
+
+TEST_CASE("RandomSelector tries all children until success", "[ai][bt]")
+{
+	Blackboard bb;
+	int callCount = 0;
+
+	RandomSelector rsel;
+	rsel.addChild(std::make_unique<Action>([&](Blackboard&) { ++callCount; return Status::Failure; }));
+	rsel.addChild(std::make_unique<Action>([&](Blackboard&) { ++callCount; return Status::Failure; }));
+	rsel.addChild(std::make_unique<Action>([&](Blackboard&) { ++callCount; return Status::Success; }));
+
+	REQUIRE(rsel.tick(bb) == Status::Success);
+	// 順序はランダムだが、1つ成功するまで試行する
+	REQUIRE(callCount >= 1);
+	REQUIRE(callCount <= 3);
+}
+
+TEST_CASE("RandomSelector fails when all fail", "[ai][bt]")
+{
+	Blackboard bb;
+	RandomSelector rsel;
+	rsel.addChild(std::make_unique<Action>([](Blackboard&) { return Status::Failure; }));
+	rsel.addChild(std::make_unique<Action>([](Blackboard&) { return Status::Failure; }));
+
+	REQUIRE(rsel.tick(bb) == Status::Failure);
+}
+
+// ── Builder with Parallel ─────────────────────────────────
+
+TEST_CASE("Builder parallel creates Parallel node", "[ai][bt]")
+{
+	auto tree = Builder()
+		.parallel(ParallelPolicy::RequireAll)
+			.action([](Blackboard& bb) { bb.set("a", true); return Status::Success; })
+			.action([](Blackboard& bb) { bb.set("b", true); return Status::Success; })
+		.end()
+		.build();
+
+	Blackboard bb;
+	REQUIRE(tree->tick(bb) == Status::Success);
+	REQUIRE(bb.get<bool>("a").value_or(false));
+	REQUIRE(bb.get<bool>("b").value_or(false));
+}
+
+TEST_CASE("Builder randomSelector creates RandomSelector node", "[ai][bt]")
+{
+	int count = 0;
+	auto tree = Builder()
+		.randomSelector()
+			.action([&](Blackboard&) { ++count; return Status::Failure; })
+			.action([&](Blackboard&) { ++count; return Status::Success; })
+		.end()
+		.build();
+
+	Blackboard bb;
+	REQUIRE(tree->tick(bb) == Status::Success);
+	REQUIRE(count >= 1);
+}

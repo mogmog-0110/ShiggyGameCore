@@ -6,6 +6,7 @@
 /// グローバルなシングルトンの代替。テスト時にサービスの差し替えが容易。
 
 #include <memory>
+#include <shared_mutex>
 #include <stdexcept>
 #include <typeindex>
 #include <unordered_map>
@@ -37,6 +38,7 @@ public:
 	template <typename T>
 	void provide(std::shared_ptr<T> service)
 	{
+		std::unique_lock lock(m_mutex);
 		m_services[std::type_index(typeid(T))] = std::move(service);
 	}
 
@@ -47,6 +49,7 @@ public:
 	template <typename T>
 	[[nodiscard]] T& get() const
 	{
+		std::shared_lock lock(m_mutex);
 		const auto it = m_services.find(std::type_index(typeid(T)));
 		if (it == m_services.end())
 		{
@@ -61,6 +64,7 @@ public:
 	template <typename T>
 	[[nodiscard]] bool has() const
 	{
+		std::shared_lock lock(m_mutex);
 		return m_services.contains(std::type_index(typeid(T)));
 	}
 
@@ -69,16 +73,19 @@ public:
 	template <typename T>
 	void remove()
 	{
+		std::unique_lock lock(m_mutex);
 		m_services.erase(std::type_index(typeid(T)));
 	}
 
 	/// @brief 全サービスをクリアする
 	void clear()
 	{
+		std::unique_lock lock(m_mutex);
 		m_services.clear();
 	}
 
 private:
+	mutable std::shared_mutex m_mutex;  ///< スレッド安全性のためのミューテックス
 	std::unordered_map<std::type_index, std::shared_ptr<void>> m_services;
 };
 

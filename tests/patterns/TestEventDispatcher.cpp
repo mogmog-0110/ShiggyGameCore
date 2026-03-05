@@ -5,6 +5,10 @@
 
 #include "sgc/patterns/EventDispatcher.hpp"
 
+#include <atomic>
+#include <thread>
+#include <vector>
+
 namespace
 {
 struct DamageEvent { int amount; };
@@ -126,4 +130,91 @@ TEST_CASE("EventDispatcher off during emit is safe (reentry)", "[patterns][event
 	callCount = 0;
 	dispatcher.emit(DamageEvent{20});
 	REQUIRE(callCount == 1);
+}
+
+// ── priority ────────────────────────────────────────────
+
+TEST_CASE("EventDispatcher high priority listeners fire first", "[patterns][event]")
+{
+	sgc::EventDispatcher dispatcher;
+	std::vector<std::string> order;
+
+	dispatcher.on<DamageEvent>([&](const DamageEvent&) { order.push_back("low"); }, sgc::Priority::Low);
+	dispatcher.on<DamageEvent>([&](const DamageEvent&) { order.push_back("high"); }, sgc::Priority::High);
+	dispatcher.on<DamageEvent>([&](const DamageEvent&) { order.push_back("normal"); }, sgc::Priority::Normal);
+
+	dispatcher.emit(DamageEvent{10});
+
+	REQUIRE(order.size() == 3);
+	REQUIRE(order[0] == "high");
+	REQUIRE(order[1] == "normal");
+	REQUIRE(order[2] == "low");
+}
+
+// ── once ────────────────────────────────────────────────
+
+TEST_CASE("EventDispatcher once fires only once", "[patterns][event]")
+{
+	sgc::EventDispatcher dispatcher;
+	int count = 0;
+
+	dispatcher.once<DamageEvent>([&](const DamageEvent&) { ++count; });
+	dispatcher.emit(DamageEvent{10});
+	dispatcher.emit(DamageEvent{20});
+
+	REQUIRE(count == 1);
+}
+
+TEST_CASE("EventDispatcher once with priority", "[patterns][event]")
+{
+	sgc::EventDispatcher dispatcher;
+	std::vector<std::string> order;
+
+	dispatcher.on<DamageEvent>([&](const DamageEvent&) { order.push_back("normal"); });
+	dispatcher.once<DamageEvent>([&](const DamageEvent&) { order.push_back("once-high"); }, sgc::Priority::High);
+
+	dispatcher.emit(DamageEvent{10});
+	REQUIRE(order[0] == "once-high");
+	REQUIRE(order[1] == "normal");
+
+	order.clear();
+	dispatcher.emit(DamageEvent{20});
+	REQUIRE(order.size() == 1);
+	REQUIRE(order[0] == "normal");
+}
+
+// ── default priority backward compat ────────────────────
+
+TEST_CASE("EventDispatcher default priority is Normal", "[patterns][event]")
+{
+	sgc::EventDispatcher dispatcher;
+	int count = 0;
+	dispatcher.on<DamageEvent>([&](const DamageEvent&) { ++count; });
+	dispatcher.emit(DamageEvent{10});
+	REQUIRE(count == 1);
+}
+
+TEST_CASE("EventDispatcher concurrent emit is safe", "[patterns][event]")
+{
+	sgc::EventDispatcher dispatcher;
+	std::atomic<int> totalCount{0};
+
+	dispatcher.on<DamageEvent>([&](const DamageEvent& e) {
+		totalCount.fetch_add(e.amount);
+	});
+
+	std::vector<std::thread> threads;
+	for (int i = 0; i < 8; ++i)
+	{
+		threads.emplace_back([&dispatcher]()
+		{
+			for (int j = 0; j < 100; ++j)
+			{
+				dispatcher.emit(DamageEvent{1});
+			}
+		});
+	}
+	for (auto& t : threads) t.join();
+
+	REQUIRE(totalCount.load() == 800);
 }

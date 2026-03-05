@@ -196,6 +196,53 @@ struct Color
 		return {r * a, g * a, b * a, a};
 	}
 
+	// ── 明度・彩度操作（HSV経由、不変操作） ─────────────────
+
+	/// @brief 指定量だけ明るくした新しいColorを返す
+	/// @param amount 明るさの増加量 [0, 1]
+	[[nodiscard]] Color brighten(T amount) const noexcept
+	{
+		auto hsv = toHSV();
+		hsv.v = (hsv.v + amount > T{1}) ? T{1} : hsv.v + amount;
+		return fromHSV(hsv.h, hsv.s, hsv.v, a);
+	}
+
+	/// @brief 指定量だけ暗くした新しいColorを返す
+	/// @param amount 明るさの減少量 [0, 1]
+	[[nodiscard]] Color darken(T amount) const noexcept
+	{
+		auto hsv = toHSV();
+		hsv.v = (hsv.v - amount < T{0}) ? T{0} : hsv.v - amount;
+		return fromHSV(hsv.h, hsv.s, hsv.v, a);
+	}
+
+	/// @brief 指定量だけ彩度を上げた新しいColorを返す
+	/// @param amount 彩度の増加量 [0, 1]
+	[[nodiscard]] Color saturate(T amount) const noexcept
+	{
+		auto hsv = toHSV();
+		hsv.s = (hsv.s + amount > T{1}) ? T{1} : hsv.s + amount;
+		return fromHSV(hsv.h, hsv.s, hsv.v, a);
+	}
+
+	/// @brief 指定量だけ彩度を下げた新しいColorを返す
+	/// @param amount 彩度の減少量 [0, 1]
+	[[nodiscard]] Color desaturate(T amount) const noexcept
+	{
+		auto hsv = toHSV();
+		hsv.s = (hsv.s - amount < T{0}) ? T{0} : hsv.s - amount;
+		return fromHSV(hsv.h, hsv.s, hsv.v, a);
+	}
+
+	/// @brief 補色を返す（色相を180度回転）
+	[[nodiscard]] Color complement() const noexcept
+	{
+		auto hsv = toHSV();
+		hsv.h += T{180};
+		if (hsv.h >= T{360}) hsv.h -= T{360};
+		return fromHSV(hsv.h, hsv.s, hsv.v, a);
+	}
+
 	// ── 補間 ────────────────────────────────────────────────
 
 	/// @brief RGB空間で線形補間する

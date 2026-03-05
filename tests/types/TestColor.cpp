@@ -238,3 +238,51 @@ TEST_CASE("Color fromHSV grayscale has zero saturation", "[types][color]")
 	REQUIRE(gray.g == Approx(0.5f));
 	REQUIRE(gray.b == Approx(0.5f));
 }
+
+// ── brighten / darken ───────────────────────────────────
+
+TEST_CASE("Color brighten increases value", "[types][color]")
+{
+	const auto dark = sgc::Colorf::fromHSV(0.0f, 1.0f, 0.5f);
+	const auto bright = dark.brighten(0.3f);
+	auto hsvOrig = dark.toHSV();
+	auto hsvBright = bright.toHSV();
+	REQUIRE(hsvBright.v > hsvOrig.v);
+	REQUIRE(hsvBright.v == Approx(0.8f).margin(0.05f));
+}
+
+TEST_CASE("Color darken decreases value", "[types][color]")
+{
+	const auto bright = sgc::Colorf::fromHSV(0.0f, 1.0f, 0.8f);
+	const auto dark = bright.darken(0.3f);
+	auto hsvDark = dark.toHSV();
+	REQUIRE(hsvDark.v == Approx(0.5f).margin(0.05f));
+}
+
+// ── saturate / desaturate ───────────────────────────────
+
+TEST_CASE("Color saturate increases saturation", "[types][color]")
+{
+	const auto muted = sgc::Colorf::fromHSV(120.0f, 0.3f, 1.0f);
+	const auto vivid = muted.saturate(0.5f);
+	auto hsvVivid = vivid.toHSV();
+	REQUIRE(hsvVivid.s == Approx(0.8f).margin(0.05f));
+}
+
+TEST_CASE("Color desaturate decreases saturation", "[types][color]")
+{
+	const auto vivid = sgc::Colorf::fromHSV(120.0f, 0.8f, 1.0f);
+	const auto muted = vivid.desaturate(0.5f);
+	auto hsvMuted = muted.toHSV();
+	REQUIRE(hsvMuted.s == Approx(0.3f).margin(0.05f));
+}
+
+// ── complement ──────────────────────────────────────────
+
+TEST_CASE("Color complement shifts hue by 180", "[types][color]")
+{
+	const auto red = sgc::Colorf::red();
+	const auto comp = red.complement();
+	auto hsv = comp.toHSV();
+	REQUIRE(hsv.h == Approx(180.0f).margin(1.0f));
+}
