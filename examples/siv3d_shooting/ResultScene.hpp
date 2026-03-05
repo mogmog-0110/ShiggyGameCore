@@ -8,7 +8,7 @@
 #include "sgc/animation/Tween.hpp"
 #include "sgc/core/Hash.hpp"
 #include "sgc/math/Easing.hpp"
-#include "sgc/siv3d/SceneAdapter.hpp"
+#include "sgc/scene/App.hpp"
 #include "sgc/ui/HudLayout.hpp"
 
 #include "KeyCodes.hpp"
@@ -20,7 +20,7 @@ using namespace sgc::literals;
 ///
 /// 最終スコアとハイスコアを表示し、Enterキーでタイトルに戻る。
 /// GAME OVERテキストは上からスライドインアニメーション付き。
-class ResultScene : public sgc::siv3d::AppScene<SharedData>
+class ResultScene : public sgc::AppScene<SharedData>
 {
 public:
 	using AppScene::AppScene;

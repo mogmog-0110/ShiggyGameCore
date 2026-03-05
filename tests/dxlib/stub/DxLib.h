@@ -125,6 +125,20 @@ inline int& nextFontHandle()
 	return handle;
 }
 
+/// @brief ProcessMessage()の戻り値を制御する
+inline int& processMessageResult()
+{
+	static int r = 0;
+	return r;
+}
+
+/// @brief ProcessMessage()の呼び出し回数を取得する
+inline int& processMessageCallCount()
+{
+	static int c = 0;
+	return c;
+}
+
 /// @brief 全スタブ状態をリセットする
 inline void reset()
 {
@@ -136,6 +150,8 @@ inline void reset()
 	mouseInput() = 0;
 	fontRecords().clear();
 	nextFontHandle() = 1;
+	processMessageResult() = 0;
+	processMessageCallCount() = 0;
 }
 
 } // namespace dxlib_stub
@@ -259,3 +275,15 @@ inline int GetDrawStringWidthToHandle(const char* /*text*/, int strLen, int /*ha
 {
 	return strLen * 12;  // 近似値: 1文字あたり12ピクセル
 }
+
+// ── ゲームループ関数スタブ ──────────────────────────────
+
+inline int ProcessMessage()
+{
+	++dxlib_stub::processMessageCallCount();
+	return dxlib_stub::processMessageResult();
+}
+
+inline void ClearDrawScreen() { /* no-op */ }
+
+inline void ScreenFlip() { /* no-op */ }

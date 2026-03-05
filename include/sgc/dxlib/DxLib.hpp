@@ -17,3 +17,4 @@
 #include "sgc/dxlib/DxLibRenderer.hpp"
 #include "sgc/dxlib/DxLibInputProvider.hpp"
 #include "sgc/dxlib/DxLibTextRenderer.hpp"
+#include "sgc/dxlib/DxLibSceneAdapter.hpp"

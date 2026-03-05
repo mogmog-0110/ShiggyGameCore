@@ -111,6 +111,7 @@ add_executable(sgc_tests
 	memory/TestPoolAllocator.cpp
 	memory/TestStackAllocator.cpp
 	memory/TestFreeListAllocator.cpp
+	memory/TestStlAllocatorAdapter.cpp
 
 	# UI
 	ui/TestAnchor.cpp
@@ -142,9 +143,14 @@ add_executable(sgc_dxlib_adapter_tests
 	dxlib/TestDxLibRenderer.cpp
 	dxlib/TestDxLibInputProvider.cpp
 	dxlib/TestDxLibTextRenderer.cpp
+	dxlib/TestDxLibSceneAdapter.cpp
 )
 target_include_directories(sgc_dxlib_adapter_tests BEFORE PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/dxlib/stub
 )
 target_link_libraries(sgc_dxlib_adapter_tests PRIVATE sgc::sgc Catch2::Catch2WithMain)
 catch_discover_tests(sgc_dxlib_adapter_tests)
+
+# clang-tidy validation target (single TU including all public headers)
+add_executable(sgc_tidy_check tidy/TidyAllHeaders.cpp)
+target_link_libraries(sgc_tidy_check PRIVATE sgc::sgc)

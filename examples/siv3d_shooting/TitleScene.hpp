@@ -8,7 +8,7 @@
 #include "sgc/animation/Tween.hpp"
 #include "sgc/core/Hash.hpp"
 #include "sgc/math/Easing.hpp"
-#include "sgc/siv3d/SceneAdapter.hpp"
+#include "sgc/scene/App.hpp"
 #include "sgc/ui/HudLayout.hpp"
 
 #include "KeyCodes.hpp"
@@ -20,7 +20,7 @@ using namespace sgc::literals;
 ///
 /// タイトルとハイスコアを表示し、Enterキーでゲームシーンに遷移する。
 /// タイトルテキストはアルファパルスアニメーション付き。
-class TitleScene : public sgc::siv3d::AppScene<SharedData>
+class TitleScene : public sgc::AppScene<SharedData>
 {
 public:
 	using AppScene::AppScene;

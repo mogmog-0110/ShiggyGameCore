@@ -54,7 +54,7 @@ jobs:
           CXX: ${{ matrix.cxx || '' }}
 
       - name: Build
-        run: cmake --build build --config Debug
+        run: cmake --build build --config Debug -j
 
       - name: Test
         run: ctest --test-dir build -C Debug --output-on-failure
@@ -92,4 +92,4 @@ jobs:
         run: cmake --preset ci-clang-tidy
 
       - name: Build with clang-tidy
-        run: cmake --build build
+        run: cmake --build build --target sgc_tidy_check -j

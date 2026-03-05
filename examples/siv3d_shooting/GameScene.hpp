@@ -13,7 +13,7 @@
 #include "sgc/effects/ParticleSystem.hpp"
 #include "sgc/input/ActionMap.hpp"
 #include "sgc/patterns/EventDispatcher.hpp"
-#include "sgc/siv3d/SceneAdapter.hpp"
+#include "sgc/scene/App.hpp"
 #include "sgc/ui/HudLayout.hpp"
 
 #include "BulletSystem.hpp"
@@ -35,7 +35,7 @@ using namespace sgc::literals;
 ///
 /// ECSワールドを初期化し、各システムを登録してゲームループを実行する。
 /// sgcのECS、EventDispatcher、ActionMap、IntervalTimerを活用する。
-class GameScene : public sgc::siv3d::AppScene<SharedData>
+class GameScene : public sgc::AppScene<SharedData>
 {
 public:
 	using AppScene::AppScene;
