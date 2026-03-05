@@ -6,6 +6,7 @@
 /// std::expected（C++23）の代替として、std::variantベースで実装。
 /// MSVC/GCC/Clang全てのC++20コンパイラで動作する。
 
+#include <functional>
 #include <string>
 #include <type_traits>
 #include <variant>
