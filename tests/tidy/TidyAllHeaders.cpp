@@ -70,6 +70,7 @@
 
 // Animation
 #include "sgc/animation/Tween.hpp"
+#include "sgc/animation/TweenTimeline.hpp"
 
 // Spatial
 #include "sgc/spatial/Grid.hpp"
@@ -88,6 +89,9 @@
 #include "sgc/ecs/View.hpp"
 #include "sgc/ecs/World.hpp"
 
+// Audio (interfaces)
+#include "sgc/audio/IAudioPlayer.hpp"
+
 // Graphics (interfaces)
 #include "sgc/graphics/IRenderer.hpp"
 #include "sgc/graphics/ITextMeasure.hpp"
@@ -97,6 +101,14 @@
 #include "sgc/input/ActionMap.hpp"
 #include "sgc/input/IInputProvider.hpp"
 #include "sgc/input/InputBuffer.hpp"
+#include "sgc/input/InputModeManager.hpp"
+
+// Physics
+#include "sgc/physics/AABB2DCollision.hpp"
+#include "sgc/physics/CollisionUtils.hpp"
+#include "sgc/physics/FixedTimestep.hpp"
+#include "sgc/physics/RayCast2D.hpp"
+#include "sgc/physics/RigidBody2D.hpp"
 
 // Effects
 #include "sgc/effects/ParticleSystem.hpp"
@@ -113,14 +125,26 @@
 #include "sgc/scene/SceneManager.hpp"
 #include "sgc/scene/Transform.hpp"
 
+// Config
+#include "sgc/config/ConfigManager.hpp"
+
+// Debug
+#include "sgc/debug/DebugOverlay.hpp"
+#include "sgc/debug/FpsCounter.hpp"
+
 // Net
 #include "sgc/net/MessageChannel.hpp"
+#include "sgc/net/StateSync.hpp"
 
 // UI
 #include "sgc/ui/Anchor.hpp"
 #include "sgc/ui/Button.hpp"
 #include "sgc/ui/HudLayout.hpp"
+#include "sgc/ui/PendingAction.hpp"
 #include "sgc/ui/Theme.hpp"
+#include "sgc/ui/Slider.hpp"
+#include "sgc/ui/Checkbox.hpp"
+#include "sgc/ui/ProgressBar.hpp"
 #include "sgc/ui/WidgetState.hpp"
 
 // DxLib (TypeConvert only - DxLib.h不要)

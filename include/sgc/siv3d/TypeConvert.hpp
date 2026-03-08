@@ -136,6 +136,44 @@ namespace sgc::siv3d
 	};
 }
 
+// ── Rect 変換 ─────────────────────────────────────────
+
+/// @brief sgc::Rectf → s3d::RectF に変換する
+/// @param r sgcの矩形（float、position+size形式）
+/// @return Siv3Dの矩形（double、pos+size形式）
+///
+/// @code
+/// sgc::Rectf rect{{10.0f, 20.0f}, {100.0f, 50.0f}};
+/// s3d::RectF sivRect = sgc::siv3d::toSiv(rect);
+/// @endcode
+[[nodiscard]] constexpr s3d::RectF toSiv(const Rectf& r) noexcept
+{
+	return {
+		static_cast<double>(r.x()),
+		static_cast<double>(r.y()),
+		static_cast<double>(r.width()),
+		static_cast<double>(r.height())
+	};
+}
+
+/// @brief s3d::RectF → sgc::Rectf に変換する
+/// @param r Siv3Dの矩形（double）
+/// @return sgcの矩形（float、position+size形式）
+///
+/// @code
+/// s3d::RectF sivRect{10.0, 20.0, 100.0, 50.0};
+/// sgc::Rectf rect = sgc::siv3d::toRectf(sivRect);
+/// @endcode
+[[nodiscard]] constexpr Rectf toRectf(const s3d::RectF& r) noexcept
+{
+	return {
+		static_cast<float>(r.x),
+		static_cast<float>(r.y),
+		static_cast<float>(r.w),
+		static_cast<float>(r.h)
+	};
+}
+
 // ── Circle 変換 ────────────────────────────────────────
 
 /// @brief sgcの円パラメータ → s3d::Circle に変換する

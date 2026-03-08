@@ -34,6 +34,9 @@
 
 #define DX_FONTTYPE_ANTIALIASING_EDGE_4X4 23
 
+#define DX_PLAYTYPE_LOOP 3
+#define DX_PLAYTYPE_BACK 2
+
 // ── スタブ記録・モック状態 ──────────────────────────────
 
 namespace dxlib_stub
@@ -48,7 +51,13 @@ enum class DrawType
 	LineAA,
 	TriangleAA,
 	BlendMode,
-	StringToHandle
+	StringToHandle,
+	SoundPlay,
+	SoundStop,
+	SoundVolume,
+	SoundLoad,
+	SoundDelete,
+	SoundCheck
 };
 
 /// @brief 描画コール記録
@@ -139,6 +148,29 @@ inline int& processMessageCallCount()
 	return c;
 }
 
+/// @brief サウンド記録
+struct SoundRecord
+{
+	int handle;        ///< サウンドハンドル
+	int volume;        ///< ボリューム（0-255）
+	bool playing;      ///< 再生中か
+	bool deleted;      ///< 削除済みか
+};
+
+/// @brief サウンド記録リストを取得する
+inline std::vector<SoundRecord>& soundRecords()
+{
+	static std::vector<SoundRecord> records;
+	return records;
+}
+
+/// @brief 次のサウンドハンドルカウンタ
+inline int& nextSoundHandle()
+{
+	static int handle = 1;
+	return handle;
+}
+
 /// @brief 全スタブ状態をリセットする
 inline void reset()
 {
@@ -150,6 +182,8 @@ inline void reset()
 	mouseInput() = 0;
 	fontRecords().clear();
 	nextFontHandle() = 1;
+	soundRecords().clear();
+	nextSoundHandle() = 1;
 	processMessageResult() = 0;
 	processMessageCallCount() = 0;
 }
@@ -287,3 +321,77 @@ inline int ProcessMessage()
 inline void ClearDrawScreen() { /* no-op */ }
 
 inline void ScreenFlip() { /* no-op */ }
+
+// ── サウンド関数スタブ ──────────────────────────────────
+
+inline int LoadSoundMem(const char* /*path*/)
+{
+	const int handle = dxlib_stub::nextSoundHandle()++;
+	dxlib_stub::soundRecords().push_back({handle, 255, false, false});
+	return handle;
+}
+
+inline int DeleteSoundMem(int handle)
+{
+	for (auto& rec : dxlib_stub::soundRecords())
+	{
+		if (rec.handle == handle)
+		{
+			rec.deleted = true;
+			rec.playing = false;
+			return 0;
+		}
+	}
+	return -1;
+}
+
+inline int PlaySoundMem(int handle, int /*playType*/)
+{
+	for (auto& rec : dxlib_stub::soundRecords())
+	{
+		if (rec.handle == handle)
+		{
+			rec.playing = true;
+			return 0;
+		}
+	}
+	return -1;
+}
+
+inline int StopSoundMem(int handle)
+{
+	for (auto& rec : dxlib_stub::soundRecords())
+	{
+		if (rec.handle == handle)
+		{
+			rec.playing = false;
+			return 0;
+		}
+	}
+	return -1;
+}
+
+inline int ChangeVolumeSoundMem(int volume, int handle)
+{
+	for (auto& rec : dxlib_stub::soundRecords())
+	{
+		if (rec.handle == handle)
+		{
+			rec.volume = volume;
+			return 0;
+		}
+	}
+	return -1;
+}
+
+inline int CheckSoundMem(int handle)
+{
+	for (const auto& rec : dxlib_stub::soundRecords())
+	{
+		if (rec.handle == handle)
+		{
+			return rec.playing ? 1 : 0;
+		}
+	}
+	return 0;
+}

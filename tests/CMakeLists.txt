@@ -63,6 +63,7 @@ add_executable(sgc_tests
 
 	# Animation
 	animation/TestTween.cpp
+	animation/TestTweenTimeline.cpp
 
 	# Spatial
 	spatial/TestGrid.cpp
@@ -88,6 +89,7 @@ add_executable(sgc_tests
 	input/TestActionMap.cpp
 	input/TestInputBuffer.cpp
 	input/TestInputProvider.cpp
+	input/TestInputModeManager.cpp
 
 	# Effects
 	effects/TestParticleSystem.cpp
@@ -103,8 +105,16 @@ add_executable(sgc_tests
 	scene/TestTransform.cpp
 	scene/TestCamera.cpp
 
+	# Config
+	config/TestConfigManager.cpp
+
+	# Debug
+	debug/TestFpsCounter.cpp
+	debug/TestDebugOverlay.cpp
+
 	# Net
 	net/TestMessageChannel.cpp
+	net/TestStateSync.cpp
 
 	# Memory
 	memory/TestArenaAllocator.cpp
@@ -119,6 +129,20 @@ add_executable(sgc_tests
 	ui/TestHudLayout.cpp
 	ui/TestButton.cpp
 	ui/TestTheme.cpp
+	ui/TestPendingAction.cpp
+	ui/TestSlider.cpp
+	ui/TestCheckbox.cpp
+	ui/TestProgressBar.cpp
+
+	# Audio
+	audio/TestAudioPlayer.cpp
+
+	# Physics
+	physics/TestFixedTimestep.cpp
+	physics/TestCollisionUtils.cpp
+	physics/TestAABB2DCollision.cpp
+	physics/TestRigidBody2D.cpp
+	physics/TestRayCast2D.cpp
 
 	# DxLib (TypeConvert only - DxLib.h not required)
 	dxlib/TestDxLibTypeConvert.cpp
@@ -144,6 +168,7 @@ add_executable(sgc_dxlib_adapter_tests
 	dxlib/TestDxLibInputProvider.cpp
 	dxlib/TestDxLibTextRenderer.cpp
 	dxlib/TestDxLibSceneAdapter.cpp
+	dxlib/TestDxLibAudioPlayer.cpp
 )
 target_include_directories(sgc_dxlib_adapter_tests BEFORE PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/dxlib/stub
