@@ -146,6 +146,15 @@
 #include "sgc/ui/Checkbox.hpp"
 #include "sgc/ui/ProgressBar.hpp"
 #include "sgc/ui/WidgetState.hpp"
+#include "sgc/ui/Badge.hpp"
+#include "sgc/ui/Panel.hpp"
+#include "sgc/ui/RadioButton.hpp"
+#include "sgc/ui/Scrollbar.hpp"
+#include "sgc/ui/StackLayout.hpp"
+#include "sgc/ui/TextLayout.hpp"
+#include "sgc/ui/Toast.hpp"
+#include "sgc/ui/ToggleSwitch.hpp"
+#include "sgc/ui/Tooltip.hpp"
 
 // DxLib (TypeConvert only - DxLib.h不要)
 #include "sgc/dxlib/TypeConvert.hpp"

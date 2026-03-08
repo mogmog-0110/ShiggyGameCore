@@ -133,6 +133,15 @@ add_executable(sgc_tests
 	ui/TestSlider.cpp
 	ui/TestCheckbox.cpp
 	ui/TestProgressBar.cpp
+	ui/TestToggleSwitch.cpp
+	ui/TestRadioButton.cpp
+	ui/TestPanel.cpp
+	ui/TestBadge.cpp
+	ui/TestStackLayout.cpp
+	ui/TestTooltip.cpp
+	ui/TestScrollbar.cpp
+	ui/TestToast.cpp
+	ui/TestTextLayout.cpp
 
 	# Audio
 	audio/TestAudioPlayer.cpp
@@ -169,6 +178,7 @@ add_executable(sgc_dxlib_adapter_tests
 	dxlib/TestDxLibTextRenderer.cpp
 	dxlib/TestDxLibSceneAdapter.cpp
 	dxlib/TestDxLibAudioPlayer.cpp
+	dxlib/TestDxLibTextMeasure.cpp
 )
 target_include_directories(sgc_dxlib_adapter_tests BEFORE PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/dxlib/stub

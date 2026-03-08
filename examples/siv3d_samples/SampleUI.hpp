@@ -293,7 +293,7 @@ private:
 		const auto textColor = (state == sgc::ui::WidgetState::Disabled)
 			? theme.textSecondary : theme.text;
 		data.textRenderer->drawTextCentered(
-			label, theme.fontSizeBody * 0.8f,
+			label, 20.0f,
 			sgc::Vec2f{rect.x() + rect.width() * 0.5f,
 			           rect.y() + rect.height() * 0.5f},
 			textColor);

@@ -23,6 +23,39 @@
 #include "SampleBehaviorTree.hpp"
 #include "SampleMath.hpp"
 #include "SampleFade.hpp"
+#include "SampleCommand.hpp"
+#include "SampleGrid.hpp"
+#include "SampleEventSystem.hpp"
+#include "SampleCoroutine.hpp"
+#include "SampleInputCombo.hpp"
+#include "SampleActionMap.hpp"
+#include "SampleDebugOverlay.hpp"
+#include "SampleUIWidgets.hpp"
+#include "SampleTweenTimeline.hpp"
+#include "SampleNoise.hpp"
+#include "SampleInputMode.hpp"
+#include "SampleObserver.hpp"
+#include "SampleServiceLocator.hpp"
+#include "SampleThreadPool.hpp"
+#include "SampleTimer.hpp"
+#include "SampleCamera.hpp"
+#include "SampleConfig.hpp"
+#include "SampleFixedTimestep.hpp"
+#include "SampleMemory.hpp"
+#include "SampleStateSync.hpp"
+#include "SampleLogger.hpp"
+#include "SampleMessageChannel.hpp"
+#include "SampleOctree.hpp"
+#include "SampleHudLayout.hpp"
+#include "SamplePendingAction.hpp"
+#include "SampleToggleRadio.hpp"
+#include "SamplePanelStack.hpp"
+#include "SampleTooltipToast.hpp"
+#include "SampleScrollList.hpp"
+#include "SampleTextLayout.hpp"
+#include "SampleSettingsScreen.hpp"
+#include "SampleInventoryUI.hpp"
+#include "SampleDialogUI.hpp"
 
 using namespace sgc::literals;
 
@@ -36,6 +69,10 @@ void Main()
 	s3d::Window::SetTitle(U"SGC Sample Gallery");
 	s3d::Scene::SetBackground(s3d::ColorF{0.1, 0.1, 0.12});
 
+	// ESCキーでアプリを終了しないようにする（×ボタンのみ終了）
+	// サンプルシーン内でESC→メニュー戻りに使うため
+	s3d::System::SetTerminationTriggers(s3d::UserAction::CloseButtonClicked);
+
 	// レンダラー初期化
 	sgc::siv3d::Siv3DRenderer renderer;
 
@@ -43,6 +80,7 @@ void Main()
 	sgc::siv3d::Siv3DTextRenderer textRenderer;
 	textRenderer.registerFont(48, s3d::Typeface::Heavy);
 	textRenderer.registerFont(36, s3d::Typeface::Medium);
+	textRenderer.registerFont(32, s3d::Typeface::Medium);
 	textRenderer.registerFont(28, s3d::Typeface::Medium);
 	textRenderer.registerFont(24, s3d::Typeface::Medium);
 	textRenderer.registerFont(22, s3d::Typeface::Regular);
@@ -78,6 +116,7 @@ void Main()
 	sgc::siv3d::App<SharedData> app;
 	app.getData().renderer = &renderer;
 	app.getData().textRenderer = &textRenderer;
+	app.getData().textMeasure = &textRenderer;
 	app.getData().inputProvider = &inputProvider;
 	app.getData().screenWidth = 800.0f;
 	app.getData().screenHeight = 600.0f;
@@ -97,6 +136,39 @@ void Main()
 	app.registerScene<SampleBehaviorTree>("ai"_hash);
 	app.registerScene<SampleMath>("math"_hash);
 	app.registerScene<SampleFade>("fade"_hash);
+	app.registerScene<SampleCommand>("command"_hash);
+	app.registerScene<SampleGrid>("grid"_hash);
+	app.registerScene<SampleEventSystem>("event"_hash);
+	app.registerScene<SampleCoroutine>("coroutine"_hash);
+	app.registerScene<SampleInputCombo>("combo"_hash);
+	app.registerScene<SampleActionMap>("actionmap"_hash);
+	app.registerScene<SampleDebugOverlay>("debug"_hash);
+	app.registerScene<SampleUIWidgets>("uiwidgets"_hash);
+	app.registerScene<SampleTweenTimeline>("tweentl"_hash);
+	app.registerScene<SampleNoise>("noise"_hash);
+	app.registerScene<SampleInputMode>("inputmode"_hash);
+	app.registerScene<SampleObserver>("observer"_hash);
+	app.registerScene<SampleServiceLocator>("svclocator"_hash);
+	app.registerScene<SampleThreadPool>("threadpool"_hash);
+	app.registerScene<SampleTimer>("timer"_hash);
+	app.registerScene<SampleCamera>("camera"_hash);
+	app.registerScene<SampleConfig>("config"_hash);
+	app.registerScene<SampleFixedTimestep>("fixedts"_hash);
+	app.registerScene<SampleMemory>("memory"_hash);
+	app.registerScene<SampleStateSync>("statesync"_hash);
+	app.registerScene<SampleLogger>("logger"_hash);
+	app.registerScene<SampleMessageChannel>("msgchannel"_hash);
+	app.registerScene<SampleOctree>("octree"_hash);
+	app.registerScene<SampleHudLayout>("hudlayout"_hash);
+	app.registerScene<SamplePendingAction>("pending"_hash);
+	app.registerScene<SampleToggleRadio>("toggleradio"_hash);
+	app.registerScene<SamplePanelStack>("panelstack"_hash);
+	app.registerScene<SampleTooltipToast>("tiptoast"_hash);
+	app.registerScene<SampleScrollList>("scrolllist"_hash);
+	app.registerScene<SampleTextLayout>("textlayout"_hash);
+	app.registerScene<SampleSettingsScreen>("settings"_hash);
+	app.registerScene<SampleInventoryUI>("inventory"_hash);
+	app.registerScene<SampleDialogUI>("dialog"_hash);
 
 	// 初期シーン設定
 	app.setInitialScene("menu"_hash);

@@ -36,6 +36,7 @@ struct Idle
 struct Walking
 {
 	float direction{0.0f};  ///< 移動方向（-1: 左、1: 右）
+	float holdTime{0.0f};   ///< 押し続け時間（Running遷移判定用）
 };
 
 /// @brief 走行状態（シアン、高速移動）
@@ -180,6 +181,12 @@ public:
 				else if (rightHeld && !leftHeld)
 				{
 					state.direction = 1.0f;
+				}
+				// 一定時間歩き続けたらRunningに遷移
+				state.holdTime += dt;
+				if (state.holdTime >= WALK_TO_RUN_TIME)
+				{
+					return sample_fsm::Running{state.direction};
 				}
 			}
 			else if constexpr (std::is_same_v<T, sample_fsm::Running>)
@@ -340,7 +347,7 @@ public:
 			{10.0f, 10.0f}, sgc::Colorf{0.9f, 0.6f, 1.0f, 1.0f});
 
 		tr->drawText(
-			"Left/Right: Walk  Up: Jump", 14.0f,
+			"Left/Right: Walk (hold: Run)  Up: Jump", 14.0f,
 			{10.0f, 38.0f}, sgc::Colorf{0.6f, 0.6f, 0.6f, 1.0f});
 
 		tr->drawText(
@@ -356,6 +363,7 @@ private:
 	static constexpr float RUN_SPEED = 350.0f;      ///< 走行速度(px/s)
 	static constexpr float JUMP_VELOCITY = 500.0f;  ///< ジャンプ初速(px/s)
 	static constexpr float GRAVITY = 900.0f;        ///< 重力加速度(px/s^2)
+	static constexpr float WALK_TO_RUN_TIME = 0.8f; ///< 歩行→走行遷移時間(秒)
 
 	/// @brief 状態別カラー定数
 	static constexpr sgc::Colorf COLOR_IDLE   {0.3f, 0.5f, 1.0f, 1.0f};
