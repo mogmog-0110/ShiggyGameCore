@@ -17,6 +17,7 @@
 #include <Siv3D.hpp>
 
 #include "sgc/math/Geometry.hpp"
+#include "sgc/math/Rect.hpp"
 #include "sgc/math/Vec2.hpp"
 #include "sgc/math/Vec3.hpp"
 #include "sgc/types/Color.hpp"
