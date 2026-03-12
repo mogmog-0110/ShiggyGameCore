@@ -1,4 +1,4 @@
-﻿include(FetchContent)
+include(FetchContent)
 
 FetchContent_Declare(
 	Catch2
@@ -8,7 +8,19 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
-add_executable(sgc_tests
+list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+include(CTest)
+include(Catch)
+
+# ── ヘルパーマクロ ──────────────────────────────────────
+macro(sgc_add_test_target TARGET_NAME)
+	add_executable(${TARGET_NAME} ${ARGN})
+	target_link_libraries(${TARGET_NAME} PRIVATE sgc::sgc Catch2::Catch2WithMain)
+	catch_discover_tests(${TARGET_NAME})
+endmacro()
+
+# ── 1) Core / Types / Math / Memory / Containers / Patterns ──
+sgc_add_test_target(sgc_tests_core
 	# Core
 	TestCore.cpp
 	core/TestAssert.cpp
@@ -26,6 +38,7 @@ add_executable(sgc_tests
 	core/TestRingBuffer.cpp
 	core/TestThreadPool.cpp
 	core/TestProfiler.cpp
+	core/TestISerializer.cpp
 
 	# Types
 	types/TestConcepts.cpp
@@ -58,6 +71,20 @@ add_executable(sgc_tests
 	math/TestExpressionTree.cpp
 	math/TestNodeGraph.cpp
 
+	# Memory
+	memory/TestArenaAllocator.cpp
+	memory/TestPoolAllocator.cpp
+	memory/TestStackAllocator.cpp
+	memory/TestFreeListAllocator.cpp
+	memory/TestStlAllocatorAdapter.cpp
+
+	# Containers
+	containers/TestBitSet.cpp
+	containers/TestSparseSet.cpp
+	containers/TestFreeList.cpp
+	containers/TestPriorityQueue.cpp
+	containers/TestSpatialHashMap.cpp
+
 	# Patterns
 	patterns/TestEventDispatcher.cpp
 	patterns/TestStateMachine.cpp
@@ -68,7 +95,10 @@ add_executable(sgc_tests
 	patterns/TestStrategy.cpp
 	patterns/TestFactory.cpp
 	patterns/TestDecorator.cpp
+)
 
+# ── 2) Game Systems: AI / ECS / Animation / Spatial / Scene / Input / Effects / Physics / Audio ──
+sgc_add_test_target(sgc_tests_game
 	# Animation
 	animation/TestTween.cpp
 	animation/TestTweenTimeline.cpp
@@ -94,17 +124,6 @@ add_executable(sgc_tests
 	ecs/TestEntityTemplate.cpp
 	ecs/TestMessageBus.cpp
 
-	# Graphics
-	graphics/TestRenderer.cpp
-	graphics/TestTextMeasure.cpp
-	graphics/TestTextRenderer.cpp
-
-	# Graphics3D
-	graphics3d/TestCamera3D.cpp
-	graphics3d/TestMeshFactory.cpp
-	graphics3d/TestMaterial.cpp
-	graphics3d/TestRenderer3D.cpp
-
 	# Input
 	input/TestActionMap.cpp
 	input/TestInputBuffer.cpp
@@ -119,11 +138,6 @@ add_executable(sgc_tests
 	effects/TestAffectorPresets.cpp
 	effects/TestParticlePool.cpp
 
-	# Resource
-	resource/TestResourceManager.cpp
-	resource/TestFileWatcher.cpp
-	resource/TestHotReloader.cpp
-
 	# Scene
 	scene/TestScene.cpp
 	scene/TestSceneIntegration.cpp
@@ -132,37 +146,37 @@ add_executable(sgc_tests
 	scene/TestCamera.cpp
 	scene/TestTransition.cpp
 
-	# Config
-	config/TestConfigManager.cpp
+	# Physics
+	physics/TestFixedTimestep.cpp
+	physics/TestCollisionUtils.cpp
+	physics/TestAABB2DCollision.cpp
+	physics/TestRigidBody2D.cpp
+	physics/TestRayCast2D.cpp
+	physics/TestCollisionShape3D.cpp
+	physics/TestRigidBody3D.cpp
+	physics/TestRayCast3D.cpp
+	physics/TestForceField.cpp
+	physics/TestPhysicsWorld.cpp
 
-	# Containers
-	containers/TestBitSet.cpp
-	containers/TestSparseSet.cpp
-	containers/TestFreeList.cpp
-	containers/TestPriorityQueue.cpp
-	containers/TestSpatialHashMap.cpp
+	# Audio
+	audio/TestAudioPlayer.cpp
+	audio/TestAudioBus.cpp
+	audio/TestSpatialAudio.cpp
+)
 
-	# Debug
-	debug/TestFpsCounter.cpp
-	debug/TestDebugOverlay.cpp
-	debug/TestMemoryStats.cpp
-	debug/TestTweakable.cpp
+# ── 3) UI / Graphics / Graphics3D / Debug ──
+sgc_add_test_target(sgc_tests_ui
+	# Graphics
+	graphics/TestRenderer.cpp
+	graphics/TestTextMeasure.cpp
+	graphics/TestTextRenderer.cpp
+	graphics/TestSpriteRenderer.cpp
 
-	# Net
-	net/TestMessageChannel.cpp
-	net/TestStateSync.cpp
-
-	# Network
-	network/TestNetworkEntity.cpp
-	network/TestPredictionBuffer.cpp
-	network/TestNetworkCodec.cpp
-
-	# Memory
-	memory/TestArenaAllocator.cpp
-	memory/TestPoolAllocator.cpp
-	memory/TestStackAllocator.cpp
-	memory/TestFreeListAllocator.cpp
-	memory/TestStlAllocatorAdapter.cpp
+	# Graphics3D
+	graphics3d/TestCamera3D.cpp
+	graphics3d/TestMeshFactory.cpp
+	graphics3d/TestMaterial.cpp
+	graphics3d/TestRenderer3D.cpp
 
 	# UI
 	ui/TestAnchor.cpp
@@ -199,21 +213,33 @@ add_executable(sgc_tests
 	ui/TestFlexLayout.cpp
 	ui/TestResponsiveLayout.cpp
 
-	# Audio
-	audio/TestAudioPlayer.cpp
-	audio/TestAudioBus.cpp
-	audio/TestSpatialAudio.cpp
+	# Debug
+	debug/TestFpsCounter.cpp
+	debug/TestDebugOverlay.cpp
+	debug/TestMemoryStats.cpp
+	debug/TestTweakable.cpp
+)
 
-	# Physics
-	physics/TestFixedTimestep.cpp
-	physics/TestCollisionUtils.cpp
-	physics/TestAABB2DCollision.cpp
-	physics/TestRigidBody2D.cpp
-	physics/TestRayCast2D.cpp
-	physics/TestCollisionShape3D.cpp
-	physics/TestRigidBody3D.cpp
-	physics/TestRayCast3D.cpp
-	physics/TestForceField.cpp
+# ── 4) Data / i18n / Network / Save / Procedural / etc ──
+sgc_add_test_target(sgc_tests_data
+	# Resource
+	resource/TestResourceManager.cpp
+	resource/TestFileWatcher.cpp
+	resource/TestHotReloader.cpp
+	resource/TestAssetLoader.cpp
+
+	# Config
+	config/TestConfigManager.cpp
+
+	# Net
+	net/TestMessageChannel.cpp
+	net/TestStateSync.cpp
+
+	# Network
+	network/TestNetworkEntity.cpp
+	network/TestPredictionBuffer.cpp
+	network/TestNetworkCodec.cpp
+	network/TestTransport.cpp
 
 	# Data
 	data/TestDataNode.cpp
@@ -238,6 +264,7 @@ add_executable(sgc_tests
 	# Save
 	save/TestSaveSystem.cpp
 	save/TestSaveMigration.cpp
+	save/TestSaveFormat.cpp
 
 	# Procedural
 	procedural/TestDungeonGenerator.cpp
@@ -264,17 +291,7 @@ add_executable(sgc_tests
 	bench/BenchmarkECS.cpp
 )
 
-target_link_libraries(sgc_tests PRIVATE
-	sgc::sgc
-	Catch2::Catch2WithMain
-)
-
-list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
-include(CTest)
-include(Catch)
-catch_discover_tests(sgc_tests)
-
-# DxLib adapter tests (with stub DxLib.h)
+# ── DxLib adapter tests (with stub DxLib.h) ──
 add_executable(sgc_dxlib_adapter_tests
 	dxlib/TestDxLibRenderer.cpp
 	dxlib/TestDxLibInputProvider.cpp
@@ -282,6 +299,8 @@ add_executable(sgc_dxlib_adapter_tests
 	dxlib/TestDxLibSceneAdapter.cpp
 	dxlib/TestDxLibAudioPlayer.cpp
 	dxlib/TestDxLibTextMeasure.cpp
+	dxlib/TestDxLibGamepadProvider.cpp
+	dxlib/TestDxLibRenderer3D.cpp
 )
 target_include_directories(sgc_dxlib_adapter_tests BEFORE PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/dxlib/stub
@@ -289,7 +308,7 @@ target_include_directories(sgc_dxlib_adapter_tests BEFORE PRIVATE
 target_link_libraries(sgc_dxlib_adapter_tests PRIVATE sgc::sgc Catch2::Catch2WithMain)
 catch_discover_tests(sgc_dxlib_adapter_tests)
 
-# Siv3D adapter tests (with stub Siv3D.hpp)
+# ── Siv3D adapter tests (with stub Siv3D.hpp) ──
 add_executable(sgc_siv3d_adapter_tests
 	siv3d/TestSiv3DTypeConvert.cpp
 	siv3d/TestSiv3DRenderer.cpp
@@ -298,6 +317,7 @@ add_executable(sgc_siv3d_adapter_tests
 	siv3d/TestSiv3DAudioPlayer.cpp
 	siv3d/TestSiv3DSceneAdapter.cpp
 	siv3d/TestSiv3DGamepadProvider.cpp
+	siv3d/TestSiv3DRenderer3D.cpp
 )
 target_include_directories(sgc_siv3d_adapter_tests BEFORE PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/siv3d/stub
@@ -305,6 +325,6 @@ target_include_directories(sgc_siv3d_adapter_tests BEFORE PRIVATE
 target_link_libraries(sgc_siv3d_adapter_tests PRIVATE sgc::sgc Catch2::Catch2WithMain)
 catch_discover_tests(sgc_siv3d_adapter_tests)
 
-# clang-tidy validation target (single TU including all public headers)
+# ── clang-tidy validation target ──
 add_executable(sgc_tidy_check tidy/TidyAllHeaders.cpp)
 target_link_libraries(sgc_tidy_check PRIVATE sgc::sgc)

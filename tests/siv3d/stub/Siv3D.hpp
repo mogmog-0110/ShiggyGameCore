@@ -459,6 +459,70 @@ inline DrawableText Font::operator()(const String& t) const
 	return DrawableText{this, t};
 }
 
+/// @brief テクスチャ領域（描画可能）
+struct TextureRegion
+{
+	double m_x = 0.0;
+	double m_y = 0.0;
+	double m_w = 64.0;
+	double m_h = 64.0;
+
+	/// @brief リサイズした領域を返す
+	TextureRegion resized(double w, double h) const
+	{
+		return TextureRegion{m_x, m_y, w, h};
+	}
+
+	/// @brief 回転した領域を返す
+	TextureRegion rotatedAt(const Vec2& /*origin*/, double /*angle*/) const
+	{
+		return *this;
+	}
+
+	/// @brief 描画する
+	void draw(const Vec2& pos, const ColorF& /*color*/) const
+	{
+		siv3d_stub::drawCalls().push_back({
+			siv3d_stub::DrawType::RectFill,
+			{pos.x, pos.y, m_w, m_h},
+			1.0, 1.0, 1.0, 1.0
+		});
+	}
+};
+
+/// @brief テクスチャ
+struct Texture
+{
+	int m_width = 64;
+	int m_height = 64;
+	bool m_valid = false;
+
+	Texture() = default;
+
+	/// @brief パス指定でロードする
+	explicit Texture(const String& /*path*/)
+		: m_width(64), m_height(64), m_valid(true) {}
+
+	/// @brief 有効判定
+	explicit operator bool() const { return m_valid; }
+
+	/// @brief テクスチャサイズを取得する
+	struct Size { double x; double y; };
+	[[nodiscard]] Size size() const { return Size{static_cast<double>(m_width), static_cast<double>(m_height)}; }
+
+	/// @brief ソース矩形を指定してテクスチャ領域を取得する
+	[[nodiscard]] TextureRegion operator()(const RectF& src) const
+	{
+		return TextureRegion{src.x, src.y, src.w, src.h};
+	}
+
+	/// @brief リサイズしたテクスチャ領域を取得する
+	[[nodiscard]] TextureRegion resized(double w, double h) const
+	{
+		return TextureRegion{0.0, 0.0, w, h};
+	}
+};
+
 /// @brief 入力オブジェクト（キー・マウスボタン共用）
 struct Input
 {

@@ -159,46 +159,55 @@ inline void splitBsp(
 		return std::uniform_int_distribution<int>(0, 1)(rng) == 0;
 	}();
 
+	// ノード情報をコピー（push_back後に参照が無効化されるため）
+	const int nx = node.x;
+	const int ny = node.y;
+	const int nw = node.w;
+	const int nh = node.h;
+
+	int leftIdx = -1;
+	int rightIdx = -1;
+
 	if (splitHorizontal)
 	{
 		const int minSplit = config.minRoomSize + config.padding;
-		const int maxSplit = node.h - config.minRoomSize - config.padding;
+		const int maxSplit = nh - config.minRoomSize - config.padding;
 		if (minSplit >= maxSplit)
 		{
 			return;
 		}
 		const int split = std::uniform_int_distribution<int>(minSplit, maxSplit)(rng);
 
-		BspNode left{node.x, node.y, node.w, split};
-		BspNode right{node.x, node.y + split, node.w, node.h - split};
+		BspNode left{nx, ny, nw, split};
+		BspNode right{nx, ny + split, nw, nh - split};
 
-		node.leftChild = static_cast<int>(nodes.size());
+		leftIdx = static_cast<int>(nodes.size());
 		nodes.push_back(left);
-		node.rightChild = static_cast<int>(nodes.size());
+		rightIdx = static_cast<int>(nodes.size());
 		nodes.push_back(right);
 	}
 	else
 	{
 		const int minSplit = config.minRoomSize + config.padding;
-		const int maxSplit = node.w - config.minRoomSize - config.padding;
+		const int maxSplit = nw - config.minRoomSize - config.padding;
 		if (minSplit >= maxSplit)
 		{
 			return;
 		}
 		const int split = std::uniform_int_distribution<int>(minSplit, maxSplit)(rng);
 
-		BspNode left{node.x, node.y, split, node.h};
-		BspNode right{node.x + split, node.y, node.w - split, node.h};
+		BspNode left{nx, ny, split, nh};
+		BspNode right{nx + split, ny, nw - split, nh};
 
-		node.leftChild = static_cast<int>(nodes.size());
+		leftIdx = static_cast<int>(nodes.size());
 		nodes.push_back(left);
-		node.rightChild = static_cast<int>(nodes.size());
+		rightIdx = static_cast<int>(nodes.size());
 		nodes.push_back(right);
 	}
 
-	// 再帰的に子ノードを分割（インデックスを再取得）
-	const int leftIdx = nodes[nodeIdx].leftChild;
-	const int rightIdx = nodes[nodeIdx].rightChild;
+	// push_back後にインデックスで安全にアクセス
+	nodes[static_cast<size_t>(nodeIdx)].leftChild = leftIdx;
+	nodes[static_cast<size_t>(nodeIdx)].rightChild = rightIdx;
 	splitBsp(nodes, leftIdx, depth + 1, config, rng, result);
 	splitBsp(nodes, rightIdx, depth + 1, config, rng, result);
 }

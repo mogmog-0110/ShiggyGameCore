@@ -21,6 +21,8 @@
 
 #define DX_BLENDMODE_ALPHA   1
 #define DX_BLENDMODE_NOBLEND 0
+#define DX_BLENDMODE_ADD     2
+#define DX_BLENDMODE_MULA    4
 
 #define MOUSE_INPUT_LEFT   0x0001
 #define MOUSE_INPUT_RIGHT  0x0002
@@ -57,7 +59,16 @@ enum class DrawType
 	SoundVolume,
 	SoundLoad,
 	SoundDelete,
-	SoundCheck
+	SoundCheck,
+	GraphLoad,
+	GraphDelete,
+	RectExtendGraph,
+	ExtendGraph,
+	RectRotaGraph3,
+	DrawBright,
+	Line3D,
+	Sphere3D,
+	LightAmbColor
 };
 
 /// @brief 描画コール記録
@@ -171,6 +182,67 @@ inline int& nextSoundHandle()
 	return handle;
 }
 
+/// @brief グラフィック（テクスチャ）記録
+struct GraphRecord
+{
+	int handle;       ///< グラフィックハンドル
+	int width;        ///< 幅
+	int height;       ///< 高さ
+	bool deleted;     ///< 削除済みか
+};
+
+/// @brief グラフィック記録リストを取得する
+inline std::vector<GraphRecord>& graphRecords()
+{
+	static std::vector<GraphRecord> records;
+	return records;
+}
+
+/// @brief 次のグラフィックハンドルカウンタ
+inline int& nextGraphHandle()
+{
+	static int handle = 1;
+	return handle;
+}
+
+/// @brief XInput ボタンインデックス定数
+constexpr int BUTTON_COUNT = 16;
+
+/// @brief XInput パッド状態
+struct XInputPadState
+{
+	bool connected = false;
+	unsigned char Buttons[16]{};  ///< ボタン配列
+	short ThumbLX = 0;
+	short ThumbLY = 0;
+	short ThumbRX = 0;
+	short ThumbRY = 0;
+	unsigned char LeftTrigger = 0;
+	unsigned char RightTrigger = 0;
+};
+
+/// @brief XInput パッド状態配列を取得する
+inline XInputPadState* xinputStates()
+{
+	static XInputPadState states[4]{};
+	return states;
+}
+
+/// @brief バイブレーション記録
+struct VibrationRecord
+{
+	int padId;
+	int power;
+	int time;
+};
+
+/// @brief バイブレーション記録リストを取得する
+inline std::vector<VibrationRecord>& vibrationRecords()
+{
+	static std::vector<VibrationRecord> records;
+	return records;
+}
+
 /// @brief 全スタブ状態をリセットする
 inline void reset()
 {
@@ -184,6 +256,13 @@ inline void reset()
 	nextFontHandle() = 1;
 	soundRecords().clear();
 	nextSoundHandle() = 1;
+	graphRecords().clear();
+	nextGraphHandle() = 1;
+	vibrationRecords().clear();
+	for (int i = 0; i < 4; ++i)
+	{
+		xinputStates()[i] = XInputPadState{};
+	}
 	processMessageResult() = 0;
 	processMessageCallCount() = 0;
 }
@@ -393,5 +472,200 @@ inline int CheckSoundMem(int handle)
 			return rec.playing ? 1 : 0;
 		}
 	}
+	return 0;
+}
+
+// ── グラフィック（テクスチャ）関数スタブ ─────────────────
+
+inline int LoadGraph(const char* /*path*/)
+{
+	const int handle = dxlib_stub::nextGraphHandle()++;
+	dxlib_stub::graphRecords().push_back({handle, 64, 64, false});
+	return handle;
+}
+
+inline int DeleteGraph(int handle)
+{
+	for (auto& rec : dxlib_stub::graphRecords())
+	{
+		if (rec.handle == handle)
+		{
+			rec.deleted = true;
+			return 0;
+		}
+	}
+	return -1;
+}
+
+inline int GetGraphSize(int handle, int* width, int* height)
+{
+	for (const auto& rec : dxlib_stub::graphRecords())
+	{
+		if (rec.handle == handle && !rec.deleted)
+		{
+			*width = rec.width;
+			*height = rec.height;
+			return 0;
+		}
+	}
+	*width = 0;
+	*height = 0;
+	return -1;
+}
+
+inline int DrawRectExtendGraph(int destX1, int destY1, int destX2, int destY2,
+	int srcX, int srcY, int srcW, int srcH, int /*graphHandle*/, int /*transflag*/)
+{
+	dxlib_stub::drawCalls().push_back({
+		dxlib_stub::DrawType::RectExtendGraph,
+		{static_cast<float>(destX1), static_cast<float>(destY1),
+		 static_cast<float>(destX2), static_cast<float>(destY2),
+		 static_cast<float>(srcX), static_cast<float>(srcY),
+		 static_cast<float>(srcW), static_cast<float>(srcH)},
+		0, 0
+	});
+	return 0;
+}
+
+inline int DrawExtendGraph(int x1, int y1, int x2, int y2,
+	int /*graphHandle*/, int /*transflag*/)
+{
+	dxlib_stub::drawCalls().push_back({
+		dxlib_stub::DrawType::ExtendGraph,
+		{static_cast<float>(x1), static_cast<float>(y1),
+		 static_cast<float>(x2), static_cast<float>(y2)},
+		0, 0
+	});
+	return 0;
+}
+
+inline int DrawRectRotaGraph3(int x, int y, int srcX, int srcY,
+	int srcW, int srcH, int origX, int origY,
+	double /*scaleX*/, double /*scaleY*/, double /*angle*/,
+	int /*graphHandle*/, int /*transflag*/)
+{
+	dxlib_stub::drawCalls().push_back({
+		dxlib_stub::DrawType::RectRotaGraph3,
+		{static_cast<float>(x), static_cast<float>(y),
+		 static_cast<float>(srcX), static_cast<float>(srcY),
+		 static_cast<float>(srcW), static_cast<float>(srcH),
+		 static_cast<float>(origX), static_cast<float>(origY)},
+		0, 0
+	});
+	return 0;
+}
+
+inline int SetDrawBright(int r, int g, int b)
+{
+	dxlib_stub::drawCalls().push_back({
+		dxlib_stub::DrawType::DrawBright,
+		{static_cast<float>(r), static_cast<float>(g), static_cast<float>(b)},
+		0, 0
+	});
+	return 0;
+}
+
+// ── XInput関数スタブ ──────────────────────────────────────
+
+/// @brief XInputボタンインデックス定数
+#define XINPUT_BUTTON_DPAD_UP        0
+#define XINPUT_BUTTON_DPAD_DOWN      1
+#define XINPUT_BUTTON_DPAD_LEFT      2
+#define XINPUT_BUTTON_DPAD_RIGHT     3
+#define XINPUT_BUTTON_START          4
+#define XINPUT_BUTTON_BACK           5
+#define XINPUT_BUTTON_LEFT_THUMB     6
+#define XINPUT_BUTTON_RIGHT_THUMB    7
+#define XINPUT_BUTTON_LEFT_SHOULDER  8
+#define XINPUT_BUTTON_RIGHT_SHOULDER 9
+#define XINPUT_BUTTON_A             12
+#define XINPUT_BUTTON_B             13
+#define XINPUT_BUTTON_X             14
+#define XINPUT_BUTTON_Y             15
+
+/// @brief DxLib XInput状態構造体
+struct XINPUT_STATE
+{
+	unsigned char Buttons[16]{};  ///< ボタン配列
+	short ThumbLX = 0;            ///< 左スティックX
+	short ThumbLY = 0;            ///< 左スティックY
+	short ThumbRX = 0;            ///< 右スティックX
+	short ThumbRY = 0;            ///< 右スティックY
+	unsigned char LeftTrigger = 0;  ///< 左トリガー
+	unsigned char RightTrigger = 0; ///< 右トリガー
+};
+
+inline int GetJoypadXInputState(int padId, XINPUT_STATE* state)
+{
+	const int idx = padId - 1;
+	if (idx < 0 || idx >= 4) return -1;
+	const auto& pad = dxlib_stub::xinputStates()[idx];
+	if (!pad.connected) return -1;
+
+	for (int i = 0; i < 16; ++i)
+	{
+		state->Buttons[i] = pad.Buttons[i];
+	}
+	state->ThumbLX = pad.ThumbLX;
+	state->ThumbLY = pad.ThumbLY;
+	state->ThumbRX = pad.ThumbRX;
+	state->ThumbRY = pad.ThumbRY;
+	state->LeftTrigger = pad.LeftTrigger;
+	state->RightTrigger = pad.RightTrigger;
+	return 0;
+}
+
+inline int StartJoypadVibration(int padId, int power, int time)
+{
+	dxlib_stub::vibrationRecords().push_back({padId, power, time});
+	return 0;
+}
+
+// ── 3D描画関数スタブ ──────────────────────────────────────
+
+/// @brief DxLib 3Dベクトル
+struct VECTOR
+{
+	float x = 0.0f;
+	float y = 0.0f;
+	float z = 0.0f;
+};
+
+/// @brief DxLib 浮動小数点カラー
+struct COLOR_F
+{
+	float r = 1.0f;
+	float g = 1.0f;
+	float b = 1.0f;
+	float a = 1.0f;
+};
+
+inline int SetLightAmbColor(COLOR_F /*color*/)
+{
+	dxlib_stub::drawCalls().push_back({
+		dxlib_stub::DrawType::LightAmbColor,
+		{}, 0, 0
+	});
+	return 0;
+}
+
+inline int DrawLine3D(VECTOR from, VECTOR to, unsigned int color)
+{
+	dxlib_stub::drawCalls().push_back({
+		dxlib_stub::DrawType::Line3D,
+		{from.x, from.y, from.z, to.x, to.y, to.z},
+		color, 0
+	});
+	return 0;
+}
+
+inline int DrawSphere3D(VECTOR center, float radius, int /*divNum*/,
+	unsigned int diffuseColor, unsigned int /*specularColor*/, int /*fillFlag*/)
+{
+	dxlib_stub::drawCalls().push_back({
+		dxlib_stub::DrawType::Sphere3D,
+		{center.x, center.y, center.z, radius},
+		diffuseColor, 0
+	});
 	return 0;
 }
