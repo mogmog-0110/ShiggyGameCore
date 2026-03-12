@@ -18,6 +18,7 @@
 
 #include <array>
 #include <cassert>
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <new>
@@ -33,9 +34,10 @@ namespace sgc::containers
 /// オブジェクトプールを提供する。フリーリストにより
 /// O(1)での確保・解放を実現。
 ///
-/// @tparam T 格納する型
+/// @tparam T 格納する型（破棄可能かつムーブ構築可能であること）
 /// @tparam Capacity プールの最大要素数
 template <typename T, std::size_t Capacity>
+	requires std::destructible<T> && std::move_constructible<T>
 class FreeList
 {
 public:

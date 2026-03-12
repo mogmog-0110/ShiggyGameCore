@@ -18,6 +18,7 @@
 /// });
 /// @endcode
 
+#include <concepts>
 #include <cstdint>
 #include <memory>
 #include <tuple>
@@ -34,16 +35,16 @@ namespace sgc::ecs
 {
 
 /// @brief コンポーネント追加イベント
-/// @tparam T コンポーネント型
-template <typename T>
+/// @tparam T コンポーネント型（ムーブ可能であること）
+template <std::movable T>
 struct ComponentAdded
 {
 	Entity entity;  ///< 対象エンティティ
 };
 
 /// @brief コンポーネント削除イベント
-/// @tparam T コンポーネント型
-template <typename T>
+/// @tparam T コンポーネント型（ムーブ可能であること）
+template <std::movable T>
 struct ComponentRemoved
 {
 	Entity entity;  ///< 対象エンティティ
@@ -66,8 +67,8 @@ public:
 };
 
 /// @brief 型付きコンポーネントストレージ（IComponentStorageの実装）
-/// @tparam T コンポーネント型
-template <typename T>
+/// @tparam T コンポーネント型（ムーブ可能であること）
+template <std::movable T>
 class TypedStorage : public IComponentStorage
 {
 public:
@@ -153,10 +154,10 @@ public:
 	}
 
 	/// @brief エンティティにコンポーネントを追加する
-	/// @tparam T コンポーネント型
+	/// @tparam T コンポーネント型（ムーブ可能であること）
 	/// @param entity 対象エンティティ
 	/// @param component コンポーネント
-	template <typename T>
+	template <std::movable T>
 	void addComponent(Entity entity, T component)
 	{
 		if (!isAlive(entity)) return;
@@ -168,10 +169,10 @@ public:
 	}
 
 	/// @brief エンティティのコンポーネントを取得する
-	/// @tparam T コンポーネント型
+	/// @tparam T コンポーネント型（ムーブ可能であること）
 	/// @param entity 対象エンティティ
 	/// @return コンポーネントへのポインタ（なければnullptr）
-	template <typename T>
+	template <std::movable T>
 	[[nodiscard]] T* getComponent(Entity entity)
 	{
 		if (!isAlive(entity)) return nullptr;
@@ -181,10 +182,10 @@ public:
 	}
 
 	/// @brief エンティティのコンポーネントを取得する（const版）
-	/// @tparam T コンポーネント型
+	/// @tparam T コンポーネント型（ムーブ可能であること）
 	/// @param entity 対象エンティティ
 	/// @return コンポーネントへのconstポインタ（なければnullptr）
-	template <typename T>
+	template <std::movable T>
 	[[nodiscard]] const T* getComponent(Entity entity) const
 	{
 		if (!isAlive(entity)) return nullptr;
@@ -194,9 +195,9 @@ public:
 	}
 
 	/// @brief エンティティからコンポーネントを削除する
-	/// @tparam T コンポーネント型
+	/// @tparam T コンポーネント型（ムーブ可能であること）
 	/// @param entity 対象エンティティ
-	template <typename T>
+	template <std::movable T>
 	void removeComponent(Entity entity)
 	{
 		if (!isAlive(entity)) return;
@@ -212,10 +213,10 @@ public:
 	}
 
 	/// @brief エンティティがコンポーネントを持つか確認する
-	/// @tparam T コンポーネント型
+	/// @tparam T コンポーネント型（ムーブ可能であること）
 	/// @param entity 対象エンティティ
 	/// @return 持っていればtrue
-	template <typename T>
+	template <std::movable T>
 	[[nodiscard]] bool hasComponent(Entity entity) const
 	{
 		if (!isAlive(entity)) return false;
@@ -227,11 +228,12 @@ public:
 	///
 	/// ストレージポインタを事前キャッシュし、ループ中のハッシュマップ検索を排除する。
 	///
-	/// @tparam First 最初のコンポーネント型
-	/// @tparam Rest 残りのコンポーネント型
+	/// @tparam First 最初のコンポーネント型（ムーブ可能であること）
+	/// @tparam Rest 残りのコンポーネント型（ムーブ可能であること）
 	/// @tparam Func コールバック型
 	/// @param func コールバック関数 (First&, Rest&...)
 	template <typename First, typename... Rest, typename Func>
+		requires (std::movable<First> && (std::movable<Rest> && ...))
 	void forEach(Func&& func)
 	{
 		auto* firstTyped = findStorage<First>();
@@ -279,8 +281,8 @@ public:
 	/// forEach()と同様だが、コールバックの第1引数にEntityを渡す。
 	/// ループ内でgetComponent()やdestroyEntity()を呼ぶ場合に使用する。
 	///
-	/// @tparam First 最初のコンポーネント型
-	/// @tparam Rest 残りのコンポーネント型
+	/// @tparam First 最初のコンポーネント型（ムーブ可能であること）
+	/// @tparam Rest 残りのコンポーネント型（ムーブ可能であること）
 	/// @tparam Func コールバック型
 	/// @param func コールバック関数 (Entity, First&, Rest&...)
 	///
@@ -290,6 +292,7 @@ public:
 	/// });
 	/// @endcode
 	template <typename First, typename... Rest, typename Func>
+		requires (std::movable<First> && (std::movable<Rest> && ...))
 	void forEachEntity(Func&& func)
 	{
 		auto* firstTyped = findStorage<First>();
@@ -334,7 +337,7 @@ public:
 	///
 	/// ストレージポインタをキャッシュし、毎フレームのforEachより効率的なイテレーションを提供する。
 	///
-	/// @tparam Components クエリ対象のコンポーネント型
+	/// @tparam Components クエリ対象のコンポーネント型（ムーブ可能であること）
 	/// @return View オブジェクト
 	///
 	/// @code
@@ -344,6 +347,7 @@ public:
 	/// });
 	/// @endcode
 	template <typename... Components>
+		requires (std::movable<Components> && ...)
 	[[nodiscard]] View<Components...> view()
 	{
 		auto storages = std::make_tuple(findStorage<Components>()...);
@@ -354,8 +358,8 @@ public:
 	///
 	/// 指定した除外コンポーネントを持つエンティティをスキップする。
 	///
-	/// @tparam Components 必須コンポーネント型
-	/// @tparam Excludes 除外コンポーネント型
+	/// @tparam Components 必須コンポーネント型（ムーブ可能であること）
+	/// @tparam Excludes 除外コンポーネント型（ムーブ可能であること）
 	/// @param 除外マーカー（型推論用）
 	/// @return ExcludeView オブジェクト
 	///
@@ -366,6 +370,7 @@ public:
 	/// });
 	/// @endcode
 	template <typename... Components, typename... Excludes>
+		requires ((std::movable<Components> && ...) && (std::movable<Excludes> && ...))
 	[[nodiscard]] auto viewExclude(Exclude<Excludes...>)
 	{
 		auto includeStorages = std::make_tuple(findStorage<Components>()...);
@@ -438,9 +443,9 @@ public:
 	///
 	/// SystemTraitsの実行時検証（validateSystemRequirements）で使用する。
 	///
-	/// @tparam T コンポーネント型
+	/// @tparam T コンポーネント型（ムーブ可能であること）
 	/// @return ストレージが存在すればtrue
-	template <typename T>
+	template <std::movable T>
 	[[nodiscard]] bool hasStorage() const
 	{
 		return m_storages.find(typeId<T>()) != m_storages.end();
@@ -459,7 +464,7 @@ private:
 	sgc::EventDispatcher* m_eventDispatcher{nullptr};    ///< イベントディスパッチャー（オプション）
 
 	/// @brief 型Tのストレージを取得または作成する
-	template <typename T>
+	template <std::movable T>
 	ComponentStorage<T>& getOrCreateStorage()
 	{
 		const auto tid = typeId<T>();
@@ -475,7 +480,7 @@ private:
 	}
 
 	/// @brief 型Tのストレージを検索する
-	template <typename T>
+	template <std::movable T>
 	[[nodiscard]] TypedStorage<T>* findStorage()
 	{
 		const auto it = m_storages.find(typeId<T>());
@@ -484,7 +489,7 @@ private:
 	}
 
 	/// @brief 型Tのストレージを検索する（const版）
-	template <typename T>
+	template <std::movable T>
 	[[nodiscard]] const TypedStorage<T>* findStorage() const
 	{
 		const auto it = m_storages.find(typeId<T>());
@@ -493,7 +498,7 @@ private:
 	}
 
 	/// @brief EntityIdでコンポーネントの有無を確認する（内部用）
-	template <typename T>
+	template <std::movable T>
 	[[nodiscard]] bool hasComponentById(EntityId id) const
 	{
 		const auto* typed = findStorage<T>();

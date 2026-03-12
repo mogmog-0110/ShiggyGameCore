@@ -15,6 +15,7 @@
 /// cmd.execute(world); // 一括適用
 /// @endcode
 
+#include <concepts>
 #include <functional>
 #include <vector>
 
@@ -48,16 +49,16 @@ public:
 	}
 
 	/// @brief コンポーネント追加コマンドを追加する
-	/// @tparam T コンポーネント型
+	/// @tparam T コンポーネント型（ムーブ可能であること）
 	/// @param entity 対象エンティティ
 	/// @param component コンポーネント
-	template <typename T>
+	template <std::movable T>
 	void addComponent(Entity entity, T component);
 
 	/// @brief コンポーネント削除コマンドを追加する
-	/// @tparam T コンポーネント型
+	/// @tparam T コンポーネント型（ムーブ可能であること）
 	/// @param entity 対象エンティティ
-	template <typename T>
+	template <std::movable T>
 	void removeComponent(Entity entity);
 
 	/// @brief バッファされたコマンドを一括適用する
@@ -94,7 +95,7 @@ private:
 namespace sgc::ecs
 {
 
-template <typename T>
+template <std::movable T>
 void CommandBuffer::addComponent(Entity entity, T component)
 {
 	m_genericCommands.push_back(
@@ -104,7 +105,7 @@ void CommandBuffer::addComponent(Entity entity, T component)
 	);
 }
 
-template <typename T>
+template <std::movable T>
 void CommandBuffer::removeComponent(Entity entity)
 {
 	m_genericCommands.push_back(

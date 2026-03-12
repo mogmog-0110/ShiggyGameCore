@@ -32,6 +32,7 @@
 #include "sgc/types/Result.hpp"
 #include "sgc/types/TypeList.hpp"
 #include "sgc/types/TypeTraits.hpp"
+#include "sgc/types/ErrorCode.hpp"
 
 // Math
 #include "sgc/math/Easing.hpp"
@@ -69,21 +70,28 @@
 #include "sgc/patterns/StateMachine.hpp"
 
 // Animation
+#include "sgc/animation/AnimationState.hpp"
+#include "sgc/animation/AnimationStateMachine.hpp"
 #include "sgc/animation/Tween.hpp"
 #include "sgc/animation/TweenTimeline.hpp"
 
 // Spatial
+#include "sgc/spatial/BVH2D.hpp"
+#include "sgc/spatial/BVH3D.hpp"
 #include "sgc/spatial/Grid.hpp"
 #include "sgc/spatial/Octree.hpp"
 #include "sgc/spatial/Quadtree.hpp"
 
 // AI
 #include "sgc/ai/BehaviorTree.hpp"
+#include "sgc/ai/Flocking.hpp"
+#include "sgc/ai/SteeringBehaviors.hpp"
 
 // ECS
 #include "sgc/ecs/CommandBuffer.hpp"
 #include "sgc/ecs/ComponentStorage.hpp"
 #include "sgc/ecs/Entity.hpp"
+#include "sgc/ecs/EntityTemplate.hpp"
 #include "sgc/ecs/System.hpp"
 #include "sgc/ecs/SystemTraits.hpp"
 #include "sgc/ecs/View.hpp"
@@ -105,6 +113,7 @@
 
 // Physics
 #include "sgc/physics/AABB2DCollision.hpp"
+#include "sgc/physics/CollisionFilter.hpp"
 #include "sgc/physics/CollisionUtils.hpp"
 #include "sgc/physics/FixedTimestep.hpp"
 #include "sgc/physics/RayCast2D.hpp"
@@ -114,7 +123,9 @@
 #include "sgc/effects/ParticleSystem.hpp"
 
 // Resource
+#include "sgc/resource/AsyncLoadBatch.hpp"
 #include "sgc/resource/HotReload.hpp"
+#include "sgc/resource/LoadPriority.hpp"
 #include "sgc/resource/ResourceHandle.hpp"
 #include "sgc/resource/ResourceManager.hpp"
 
@@ -128,9 +139,15 @@
 // Config
 #include "sgc/config/ConfigManager.hpp"
 
+// Containers
+#include "sgc/containers/FreeList.hpp"
+#include "sgc/containers/SparseSet.hpp"
+
 // Debug
+#include "sgc/debug/DebugDraw.hpp"
 #include "sgc/debug/DebugOverlay.hpp"
 #include "sgc/debug/FpsCounter.hpp"
+#include "sgc/debug/Tweakable.hpp"
 
 // Net
 #include "sgc/net/MessageChannel.hpp"
@@ -155,6 +172,8 @@
 #include "sgc/ui/Toast.hpp"
 #include "sgc/ui/ToggleSwitch.hpp"
 #include "sgc/ui/Tooltip.hpp"
+#include "sgc/ui/FocusableWidget.hpp"
+#include "sgc/ui/FocusManager.hpp"
 
 // Tilemap
 #include "sgc/tilemap/Tilemap.hpp"
@@ -164,12 +183,27 @@
 #include "sgc/dialogue/DialogueSystem.hpp"
 #include "sgc/dialogue/DialogueBuilder.hpp"
 
+// Visual Novel
+#include "sgc/vn/TextDisplay.hpp"
+#include "sgc/vn/TextEffects.hpp"
+#include "sgc/vn/Character.hpp"
+#include "sgc/vn/CharacterManager.hpp"
+#include "sgc/vn/Backlog.hpp"
+#include "sgc/vn/ChoicePresenter.hpp"
+#include "sgc/vn/VNScene.hpp"
+
 // Save
 #include "sgc/save/SaveSystem.hpp"
 #include "sgc/save/SaveMigration.hpp"
 
 // DxLib (TypeConvert only - DxLib.h不要)
 #include "sgc/dxlib/TypeConvert.hpp"
+
+// Procedural
+#include "sgc/procedural/DungeonGenerator.hpp"
+#include "sgc/procedural/TerrainGenerator.hpp"
+#include "sgc/procedural/WaveFunctionCollapse.hpp"
+#include "sgc/procedural/LSystem.hpp"
 
 // このファイルはclang-tidy検証のためだけに存在する。
 int main() { return 0; }

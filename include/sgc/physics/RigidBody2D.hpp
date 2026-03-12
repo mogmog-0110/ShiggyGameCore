@@ -22,6 +22,7 @@
 /// @endcode
 
 #include "sgc/physics/AABB2DCollision.hpp"
+#include "sgc/physics/CollisionFilter.hpp"
 
 namespace sgc::physics
 {
@@ -41,6 +42,7 @@ struct RigidBody2D
 	T drag{};                       ///< 空気抵抗係数 [0, 1]
 	T restitution{};                ///< 反発係数 [0, 1]
 	bool isStatic{false};           ///< 静的オブジェクトか
+	CollisionFilter filter{};       ///< 衝突フィルター（レイヤー＋マスク）
 
 	/// @brief 力を加える（F = ma に基づく）
 	/// @param force 適用する力ベクトル

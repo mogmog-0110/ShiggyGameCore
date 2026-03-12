@@ -46,6 +46,7 @@ sgc_add_test_target(sgc_tests_core
 	types/TestTypeList.cpp
 	types/TestTypeTraits.cpp
 	types/TestColor.cpp
+	types/TestErrorCode.cpp
 
 	# Math
 	math/TestMathConstants.cpp
@@ -103,17 +104,22 @@ sgc_add_test_target(sgc_tests_game
 	animation/TestTween.cpp
 	animation/TestTweenTimeline.cpp
 	animation/TestTweenCallbacks.cpp
+	animation/TestAnimationStateMachine.cpp
 
 	# Spatial
 	spatial/TestGrid.cpp
 	spatial/TestQuadtree.cpp
 	spatial/TestOctree.cpp
+	spatial/TestBVH2D.cpp
+	spatial/TestBVH3D.cpp
 
 	# AI
 	ai/TestBehaviorTree.cpp
 	ai/TestUtilityAI.cpp
 	ai/TestGOAP.cpp
 	ai/TestAStar.cpp
+	ai/TestSteering.cpp
+	ai/TestFlocking.cpp
 
 	# ECS
 	ecs/TestECS.cpp
@@ -156,6 +162,7 @@ sgc_add_test_target(sgc_tests_game
 	physics/TestRigidBody3D.cpp
 	physics/TestRayCast3D.cpp
 	physics/TestForceField.cpp
+	physics/TestCollisionFilter.cpp
 	physics/TestPhysicsWorld.cpp
 
 	# Audio
@@ -212,11 +219,13 @@ sgc_add_test_target(sgc_tests_ui
 	ui/TestBlimLayout.cpp
 	ui/TestFlexLayout.cpp
 	ui/TestResponsiveLayout.cpp
+	ui/TestFocusManager.cpp
 
 	# Debug
 	debug/TestFpsCounter.cpp
 	debug/TestDebugOverlay.cpp
 	debug/TestMemoryStats.cpp
+	debug/TestDebugDraw.cpp
 	debug/TestTweakable.cpp
 )
 
@@ -227,6 +236,7 @@ sgc_add_test_target(sgc_tests_data
 	resource/TestFileWatcher.cpp
 	resource/TestHotReloader.cpp
 	resource/TestAssetLoader.cpp
+	resource/TestAsyncLoadBatch.cpp
 
 	# Config
 	config/TestConfigManager.cpp
@@ -261,6 +271,13 @@ sgc_add_test_target(sgc_tests_data
 	dialogue/TestDialogueSystem.cpp
 	dialogue/TestDialogueBuilder.cpp
 
+	# Visual Novel
+	vn/TestTextDisplay.cpp
+	vn/TestTextEffects.cpp
+	vn/TestCharacter.cpp
+	vn/TestBacklog.cpp
+	vn/TestVNScene.cpp
+
 	# Save
 	save/TestSaveSystem.cpp
 	save/TestSaveMigration.cpp
@@ -269,6 +286,8 @@ sgc_add_test_target(sgc_tests_data
 	# Procedural
 	procedural/TestDungeonGenerator.cpp
 	procedural/TestTerrainGenerator.cpp
+	procedural/TestWFC.cpp
+	procedural/TestLSystem.cpp
 
 	# Replay
 	replay/TestReplaySystem.cpp

@@ -15,6 +15,7 @@
 /// auto entity = tmpl.instantiate(world);
 /// @endcode
 
+#include <concepts>
 #include <cstddef>
 #include <functional>
 #include <typeindex>
@@ -34,10 +35,10 @@ class EntityTemplate
 {
 public:
 	/// @brief コンポーネントを値付きで追加する
-	/// @tparam T コンポーネント型
+	/// @tparam T コンポーネント型（コピー可能であること。ラムダキャプチャで保持するため）
 	/// @param component 初期値
 	/// @return テンプレート自身への参照（メソッドチェーン用）
-	template <typename T>
+	template <std::copyable T>
 	EntityTemplate& add(const T& component)
 	{
 		m_components.push_back({
@@ -51,9 +52,10 @@ public:
 	}
 
 	/// @brief デフォルト構築のコンポーネントを追加する
-	/// @tparam T コンポーネント型
+	/// @tparam T コンポーネント型（コピー可能かつデフォルト構築可能であること）
 	/// @return テンプレート自身への参照（メソッドチェーン用）
 	template <typename T>
+		requires std::copyable<T> && std::default_initializable<T>
 	EntityTemplate& add()
 	{
 		return add(T{});

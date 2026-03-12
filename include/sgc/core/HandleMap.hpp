@@ -18,6 +18,7 @@
 /// @endcode
 
 #include <cassert>
+#include <concepts>
 #include <cstddef>
 #include <functional>
 #include <vector>
@@ -33,8 +34,8 @@ namespace sgc
 /// swap-and-pop方式で密なイテレーションを実現する。
 ///
 /// @tparam Tag ハンドルのタグ型
-/// @tparam T 格納する値の型
-template <typename Tag, typename T>
+/// @tparam T 格納する値の型（ムーブ可能であること）
+template <typename Tag, std::movable T>
 class HandleMap
 {
 public:

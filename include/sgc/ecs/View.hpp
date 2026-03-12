@@ -23,6 +23,7 @@
 /// });
 /// @endcode
 
+#include <concepts>
 #include <cstddef>
 #include <tuple>
 #include <vector>
@@ -34,7 +35,7 @@ namespace sgc::ecs
 {
 
 // 前方宣言
-template <typename T>
+template <std::movable T>
 class TypedStorage;
 
 /// @brief 除外コンポーネントマーカー
@@ -47,8 +48,9 @@ struct Exclude {};
 /// ストレージポインタをキャッシュして毎フレームのハッシュマップ検索を排除する。
 /// 最小ストレージからイテレートし、残りのコンポーネントの存在をチェックする。
 ///
-/// @tparam Components クエリ対象のコンポーネント型
+/// @tparam Components クエリ対象のコンポーネント型（ムーブ可能であること）
 template <typename... Components>
+	requires (std::movable<Components> && ...)
 class View
 {
 public:
@@ -163,6 +165,7 @@ template <typename IncludeList, typename ExcludeList>
 class ExcludeView;
 
 template <typename... Includes, typename... Excludes>
+	requires ((std::movable<Includes> && ...) && (std::movable<Excludes> && ...))
 class ExcludeView<std::tuple<Includes...>, std::tuple<Excludes...>>
 {
 public:

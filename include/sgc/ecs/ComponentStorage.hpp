@@ -7,6 +7,7 @@
 /// swap-and-pop方式のO(1)削除と、密にパックされたイテレーションを実現する。
 
 #include <cassert>
+#include <concepts>
 #include <cstddef>
 #include <limits>
 #include <vector>
@@ -20,7 +21,7 @@ namespace sgc::ecs
 constexpr std::size_t INVALID_INDEX = std::numeric_limits<std::size_t>::max();
 
 /// @brief スパースセット方式のコンポーネントストレージ
-/// @tparam T コンポーネント型
+/// @tparam T コンポーネント型（ムーブ可能であること）
 ///
 /// m_sparse[EntityId] → denseインデックス
 /// m_dense[index]     → EntityId
@@ -31,7 +32,7 @@ constexpr std::size_t INVALID_INDEX = std::numeric_limits<std::size_t>::max();
 /// positions.add(entityId, Position{10.0f, 20.0f});
 /// auto* p = positions.get(entityId);
 /// @endcode
-template <typename T>
+template <std::movable T>
 class ComponentStorage
 {
 public:

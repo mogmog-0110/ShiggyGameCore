@@ -20,6 +20,7 @@
 /// @endcode
 
 #include <any>
+#include <concepts>
 #include <functional>
 #include <optional>
 #include <string>
@@ -38,8 +39,8 @@ struct TweakInfo
 };
 
 /// @brief 調整可能変数のラッパー
-/// @tparam T 変数の型
-template <typename T>
+/// @tparam T 変数の型（コピー可能であること。std::anyに格納するため必須）
+template <std::copyable T>
 struct TweakVar
 {
 	std::string name;     ///< 変数名
@@ -75,13 +76,13 @@ class TweakRegistry
 {
 public:
 	/// @brief 調整変数を登録する
-	/// @tparam T 変数の型
+	/// @tparam T 変数の型（コピー可能であること）
 	/// @param name 変数名
 	/// @param defaultVal デフォルト値
 	/// @param minVal 最小値
 	/// @param maxVal 最大値
 	/// @return 登録されたTweakVar<T>へのポインタ
-	template <typename T>
+	template <std::copyable T>
 	TweakVar<T>* registerTweak(
 		const std::string& name,
 		const T& defaultVal,
@@ -141,11 +142,11 @@ public:
 	}
 
 	/// @brief 値を設定する
-	/// @tparam T 変数の型
+	/// @tparam T 変数の型（コピー可能であること）
 	/// @param name 変数名
 	/// @param value 新しい値（最小・最大でクランプ）
 	/// @return 設定成功時true
-	template <typename T>
+	template <std::copyable T>
 	bool setTweak(const std::string& name, const T& value)
 	{
 		const auto it = m_entries.find(name);
@@ -182,10 +183,10 @@ public:
 	}
 
 	/// @brief 値を取得する
-	/// @tparam T 変数の型
+	/// @tparam T 変数の型（コピー可能であること）
 	/// @param name 変数名
 	/// @return 値（未登録または型不一致時はnullopt）
-	template <typename T>
+	template <std::copyable T>
 	[[nodiscard]] std::optional<T> getTweak(const std::string& name) const
 	{
 		const auto it = m_entries.find(name);
@@ -202,10 +203,10 @@ public:
 	}
 
 	/// @brief TweakVar<T>へのポインタを取得する
-	/// @tparam T 変数の型
+	/// @tparam T 変数の型（コピー可能であること）
 	/// @param name 変数名
 	/// @return ポインタ（未登録時nullptr）
-	template <typename T>
+	template <std::copyable T>
 	[[nodiscard]] TweakVar<T>* getVar(const std::string& name)
 	{
 		const auto it = m_entries.find(name);

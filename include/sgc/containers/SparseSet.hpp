@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <optional>
@@ -35,8 +36,8 @@ namespace sgc::containers
 /// sparse配列でIDからdense配列インデックスへの高速マッピングを行い、
 /// dense配列で連続メモリ走査を実現する。
 ///
-/// @tparam T 格納する値の型
-template <typename T>
+/// @tparam T 格納する値の型（ムーブ可能であること）
+template <std::movable T>
 class SparseSet
 {
 public:

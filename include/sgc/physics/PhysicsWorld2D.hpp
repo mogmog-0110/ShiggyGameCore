@@ -115,6 +115,9 @@ public:
 				// 両方静的なら衝突判定不要
 				if (a.body->isStatic && b.body->isStatic) continue;
 
+				// 衝突フィルターチェック
+				if (!shouldCollide(a.body->filter, b.body->filter)) continue;
+
 				const auto aabbA = a.body->bounds(a.halfSize);
 				const auto aabbB = b.body->bounds(b.halfSize);
 

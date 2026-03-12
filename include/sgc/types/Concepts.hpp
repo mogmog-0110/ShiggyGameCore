@@ -9,6 +9,7 @@
 #include <concepts>
 #include <functional>
 #include <type_traits>
+#include <utility>
 
 namespace sgc
 {
@@ -128,5 +129,72 @@ concept Enum = std::is_enum_v<T>;
 /// enum class は基底型への暗黙変換が不可能であることを利用して判定する。
 template <typename T>
 concept ScopedEnum = Enum<T> && !std::is_convertible_v<T, std::underlying_type_t<T>>;
+
+// ── ECSコンポーネント ──────────────────────────────────────────
+
+/// @brief ECSコンポーネントとして使用可能な型
+/// @tparam T 検査対象の型
+///
+/// デフォルト構築可能かつムーブ構築可能であることを要求する。
+/// ComponentStorageのswap-and-pop削除にはムーブ代入も必要となるため、
+/// std::movableを基本とする。
+///
+/// @code
+/// struct Position { float x{0}; float y{0}; };
+/// static_assert(sgc::Component<Position>);  // OK
+/// @endcode
+template <typename T>
+concept Component = std::movable<T> && std::default_initializable<T>;
+
+// ── インターフェース検出 ─────────────────────────────────────
+
+/// @brief serialize(writer)/deserialize(reader)メソッドを持つ型
+/// @tparam T 検査対象の型
+/// @tparam Writer シリアライズ先の型
+/// @tparam Reader デシリアライズ元の型
+///
+/// @code
+/// struct SaveData {
+///     void serialize(JsonWriter& writer) const { ... }
+///     void deserialize(JsonReader& reader) { ... }
+/// };
+/// static_assert(sgc::Serializable<SaveData, JsonWriter, JsonReader>);
+/// @endcode
+template <typename T, typename Writer, typename Reader>
+concept Serializable = requires(const T ct, T t, Writer& w, Reader& r)
+{
+	ct.serialize(w);
+	t.deserialize(r);
+};
+
+/// @brief draw()メソッドを持つ型
+/// @tparam T 検査対象の型
+///
+/// @code
+/// struct Sprite {
+///     void draw() const { ... }
+/// };
+/// static_assert(sgc::Drawable<Sprite>);  // OK
+/// @endcode
+template <typename T>
+concept Drawable = requires(const T t)
+{
+	{ t.draw() };
+};
+
+/// @brief update(float dt)メソッドを持つ型
+/// @tparam T 検査対象の型
+///
+/// @code
+/// struct Particle {
+///     void update(float dt) { ... }
+/// };
+/// static_assert(sgc::Updatable<Particle>);  // OK
+/// @endcode
+template <typename T>
+concept Updatable = requires(T t)
+{
+	{ t.update(std::declval<float>()) };
+};
 
 } // namespace sgc
