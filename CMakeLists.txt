@@ -22,6 +22,11 @@ target_include_directories(sgc INTERFACE
 
 target_compile_features(sgc INTERFACE cxx_std_20)
 
+# MSVC: /FSで並列コンパイル時のPDBロックを回避
+if(MSVC)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FS")
+endif()
+
 # ── Tests ────────────────────────────────────────────────────────
 if(PROJECT_IS_TOP_LEVEL)
 	option(SGC_BUILD_TESTS "Build tests" ON)
@@ -43,6 +48,17 @@ endif()
 
 if(SGC_BUILD_EXAMPLES)
 	add_subdirectory(examples)
+endif()
+
+# ── Documentation ──────────────────────────────────────────────
+find_package(Doxygen QUIET)
+if(DOXYGEN_FOUND AND PROJECT_IS_TOP_LEVEL)
+	add_custom_target(docs
+		COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		COMMENT "Generating API documentation with Doxygen"
+		VERBATIM
+	)
 endif()
 
 # ── Install / Export ─────────────────────────────────────────────

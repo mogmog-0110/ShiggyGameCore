@@ -82,6 +82,18 @@
       "cacheVariables": {
         "CMAKE_CXX_CLANG_TIDY": "clang-tidy"
       }
+    },
+    {
+      "name": "emscripten",
+      "displayName": "Emscripten (WebAssembly)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-wasm",
+      "toolchainFile": "$env{EMSDK_DIR}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "SGC_BUILD_TESTS": "OFF",
+        "SGC_BUILD_EXAMPLES": "OFF"
+      }
     }
   ],
   "buildPresets": [

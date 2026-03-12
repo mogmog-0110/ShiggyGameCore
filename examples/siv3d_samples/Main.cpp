@@ -56,6 +56,9 @@
 #include "SampleSettingsScreen.hpp"
 #include "SampleInventoryUI.hpp"
 #include "SampleDialogUI.hpp"
+#include "SampleDraggableWindow.hpp"
+#include "SampleSpeechBubble.hpp"
+#include "SampleGlossaryPanel.hpp"
 
 using namespace sgc::literals;
 
@@ -169,6 +172,9 @@ void Main()
 	app.registerScene<SampleSettingsScreen>("settings"_hash);
 	app.registerScene<SampleInventoryUI>("inventory"_hash);
 	app.registerScene<SampleDialogUI>("dialog"_hash);
+	app.registerScene<SampleDraggableWindow>("drag_window"_hash);
+	app.registerScene<SampleSpeechBubble>("speech_bubble"_hash);
+	app.registerScene<SampleGlossaryPanel>("glossary_panel"_hash);
 
 	// 初期シーン設定
 	app.setInitialScene("menu"_hash);

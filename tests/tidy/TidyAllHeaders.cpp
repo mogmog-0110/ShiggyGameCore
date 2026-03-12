@@ -156,6 +156,18 @@
 #include "sgc/ui/ToggleSwitch.hpp"
 #include "sgc/ui/Tooltip.hpp"
 
+// Tilemap
+#include "sgc/tilemap/Tilemap.hpp"
+#include "sgc/tilemap/AutoTile.hpp"
+
+// Dialogue
+#include "sgc/dialogue/DialogueSystem.hpp"
+#include "sgc/dialogue/DialogueBuilder.hpp"
+
+// Save
+#include "sgc/save/SaveSystem.hpp"
+#include "sgc/save/SaveMigration.hpp"
+
 // DxLib (TypeConvert only - DxLib.h不要)
 #include "sgc/dxlib/TypeConvert.hpp"
 

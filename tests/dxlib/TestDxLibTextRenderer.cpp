@@ -137,6 +137,63 @@ TEST_CASE("DxLibTextRenderer drawTextCentered throws for unregistered size", "[d
 		std::out_of_range);
 }
 
+// ── measure (ITextMeasure) ──────────────────────────────
+
+TEST_CASE("DxLibTextRenderer measure returns width and height", "[dxlib][text]")
+{
+	ResetFixture fix;
+	DxLibTextRenderer renderer;
+	renderer.registerFont(24);
+
+	// "Hello" = 5文字、stub幅 = 5*12 = 60px、高さ = 24
+	const Vec2f size = renderer.measure("Hello", 24.0f);
+	REQUIRE(size.x == 60.0f);
+	REQUIRE(size.y == 24.0f);
+}
+
+TEST_CASE("DxLibTextRenderer measure with nearest font fallback", "[dxlib][text]")
+{
+	ResetFixture fix;
+	DxLibTextRenderer renderer;
+	renderer.registerFont(24);
+	renderer.registerFont(60);
+
+	// サイズ30を要求→最近接は24（差6 < 差30）
+	const Vec2f size = renderer.measure("AB", 30.0f);
+	REQUIRE(size.x == 24.0f);
+	REQUIRE(size.y == 24.0f);
+}
+
+TEST_CASE("DxLibTextRenderer measure throws when no fonts registered", "[dxlib][text]")
+{
+	ResetFixture fix;
+	DxLibTextRenderer renderer;
+
+	REQUIRE_THROWS_AS(renderer.measure("Test", 24.0f), std::out_of_range);
+}
+
+// ── lineHeight (ITextMeasure) ───────────────────────────
+
+TEST_CASE("DxLibTextRenderer lineHeight returns font size", "[dxlib][text]")
+{
+	ResetFixture fix;
+	DxLibTextRenderer renderer;
+	renderer.registerFont(24);
+
+	REQUIRE(renderer.lineHeight(24.0f) == 24.0f);
+}
+
+TEST_CASE("DxLibTextRenderer lineHeight uses nearest size", "[dxlib][text]")
+{
+	ResetFixture fix;
+	DxLibTextRenderer renderer;
+	renderer.registerFont(24);
+	renderer.registerFont(60);
+
+	// サイズ50を要求→最近接は60（差10 < 差26）
+	REQUIRE(renderer.lineHeight(50.0f) == 60.0f);
+}
+
 // ── multiple fonts ──────────────────────────────────────
 
 TEST_CASE("DxLibTextRenderer manages multiple font sizes", "[dxlib][text]")

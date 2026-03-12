@@ -16,3 +16,4 @@
 #include "sgc/siv3d/Siv3DRenderer.hpp"
 #include "sgc/siv3d/Siv3DInputProvider.hpp"
 #include "sgc/siv3d/Siv3DTextRenderer.hpp"
+#include "sgc/siv3d/Siv3DGamepadProvider.hpp"

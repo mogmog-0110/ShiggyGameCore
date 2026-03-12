@@ -32,7 +32,7 @@ enum class Category : std::uint8_t
 
 /// @brief メニューシーン
 ///
-/// 45個のサンプルへのナビゲーションボタンをカテゴリ別にグリッド表示する。
+/// 48個のサンプルへのナビゲーションボタンをカテゴリ別にグリッド表示する。
 class MenuScene : public sgc::AppScene<SharedData>
 {
 public:
@@ -143,7 +143,7 @@ public:
 	}
 
 private:
-	static constexpr std::size_t BUTTON_COUNT = 45;  ///< サンプル数
+	static constexpr std::size_t BUTTON_COUNT = 48;  ///< サンプル数
 	static constexpr int COLUMNS = 5;                ///< グリッド列数
 	static constexpr float BUTTON_W = 148.0f;        ///< ボタン幅
 	static constexpr float BUTTON_H = 48.0f;         ///< ボタン高さ
@@ -176,7 +176,8 @@ private:
 		"Thread Pool",   "Timer",          "Camera",          "Config",        "FixedTimestep",
 		"Memory Alloc",  "State Sync",     "Logger",          "MessageChannel","Octree 3D",
 		"HUD Layout",   "PendingAction",  "Toggle/Radio",   "Panel/Stack",   "Tooltip/Toast",
-		"Scroll List",  "Text Layout",    "Settings",        "Inventory UI",  "Dialog UI"
+		"Scroll List",  "Text Layout",    "Settings",        "Inventory UI",  "Dialog UI",
+		"Drag Window",  "Speech Bubble",  "Glossary Panel"
 	};
 
 	/// @brief シーンID
@@ -190,7 +191,8 @@ private:
 		"threadpool"_hash,"timer"_hash,     "camera"_hash,     "config"_hash,     "fixedts"_hash,
 		"memory"_hash,    "statesync"_hash, "logger"_hash,     "msgchannel"_hash, "octree"_hash,
 		"hudlayout"_hash, "pending"_hash,   "toggleradio"_hash,"panelstack"_hash, "tiptoast"_hash,
-		"scrolllist"_hash,"textlayout"_hash,"settings"_hash,   "inventory"_hash,  "dialog"_hash
+		"scrolllist"_hash,"textlayout"_hash,"settings"_hash,   "inventory"_hash,  "dialog"_hash,
+		"drag_window"_hash,"speech_bubble"_hash,"glossary_panel"_hash
 	};
 
 	/// @brief 各ボタンのカテゴリ
@@ -204,7 +206,8 @@ private:
 		Category::Core,     Category::Core,     Category::Scene,    Category::Core,     Category::Physics,
 		Category::Core,     Category::Net,      Category::Core,     Category::Net,      Category::Spatial,
 		Category::UI,       Category::UI,       Category::UI,       Category::UI,       Category::UI,
-		Category::UI,       Category::UI,       Category::UI,       Category::UI,       Category::UI
+		Category::UI,       Category::UI,       Category::UI,       Category::UI,       Category::UI,
+		Category::UI,       Category::UI,       Category::UI
 	};
 
 	/// @brief 各ボタンの視覚状態

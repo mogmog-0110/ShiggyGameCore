@@ -48,3 +48,4 @@ tasks/
 *.md
 !README.md
 .env
+addbom_tmp.js

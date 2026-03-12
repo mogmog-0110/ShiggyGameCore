@@ -110,4 +110,35 @@ private:
 	bool m_isOnGround = false;
 };
 
+/// @brief ワンウェイプラットフォームの通過判定
+///
+/// プレイヤーが上方から降りてきた場合のみ着地し、
+/// 下方からジャンプした場合は通過するワンウェイプラットフォームの判定。
+///
+/// @param velocity プレイヤーの速度ベクトル
+/// @param platformNormal プラットフォームの法線（通常は上向き {0, -1}）
+/// @param dotThreshold 内積の閾値（デフォルト: 0.0）
+/// @return 通過可能ならtrue（着地不可）
+[[nodiscard]] constexpr bool isOneWayPassable(
+	const Vec2f& velocity, const Vec2f& platformNormal,
+	float dotThreshold = 0.0f) noexcept
+{
+	// 速度と法線の内積: 負なら衝突方向、正なら離れる方向
+	const float dot = velocity.x * platformNormal.x + velocity.y * platformNormal.y;
+	return dot > dotThreshold;
+}
+
+/// @brief 天井接触の判定
+///
+/// 法線のY成分が負（画面座標系で上向き）かつ閾値以上であれば天井。
+///
+/// @param normal 衝突法線ベクトル
+/// @param threshold Y成分の閾値（デフォルト: 0.5）
+/// @return 天井接触の法線ならtrue
+[[nodiscard]] constexpr bool isCeilingContact(
+	const Vec2f& normal, float threshold = 0.5f) noexcept
+{
+	return normal.y < -threshold;
+}
+
 } // namespace sgc::physics

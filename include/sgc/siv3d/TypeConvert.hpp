@@ -194,4 +194,43 @@ namespace sgc::siv3d
 	return {toSiv(circle.center), static_cast<double>(circle.radius)};
 }
 
+// ── 追加変換エイリアス ─────────────────────────────────
+
+/// @brief s3d::RectF → sgc::Rectf に変換する（fromSivエイリアス）
+/// @param r Siv3Dの矩形（double）
+/// @return sgcの矩形（float、position+size形式）
+[[nodiscard]] constexpr Rectf fromSiv(const s3d::RectF& r) noexcept
+{
+	return {
+		static_cast<float>(r.x),
+		static_cast<float>(r.y),
+		static_cast<float>(r.w),
+		static_cast<float>(r.h)
+	};
+}
+
+/// @brief s3d::Circle → sgc::Circle<float> に変換する
+/// @param c Siv3Dの円
+/// @return sgcの円
+[[nodiscard]] inline Circle<float> fromSivCircle(const s3d::Circle& c) noexcept
+{
+	return {fromSiv(c.center), static_cast<float>(c.r)};
+}
+
+/// @brief sgc::Colorf → s3d::ColorF に変換する（統一名）
+/// @param c sgcのカラー
+/// @return Siv3Dの浮動小数点カラー
+[[nodiscard]] inline s3d::ColorF toSiv(const Colorf& c) noexcept
+{
+	return toSivColorF(c);
+}
+
+/// @brief s3d::ColorF → sgc::Colorf に変換する（統一名）
+/// @param c Siv3Dの浮動小数点カラー
+/// @return sgcのカラー
+[[nodiscard]] inline Colorf fromSiv(const s3d::ColorF& c) noexcept
+{
+	return fromSivColorF(c);
+}
+
 } // namespace sgc::siv3d

@@ -111,3 +111,25 @@ TEST_CASE("GroundTracker - multiple contacts in same step", "[physics][GroundTra
 
 	REQUIRE(tracker.isOnGround());
 }
+
+TEST_CASE("isOneWayPassable - falling onto platform blocks", "[physics][collision]")
+{
+	// 落下中 (velocity.y > 0) + 上向き法線 (0, -1) → dot < 0 → 着地可能
+	REQUIRE_FALSE(sgc::physics::isOneWayPassable({0.0f, 5.0f}, {0.0f, -1.0f}));
+}
+
+TEST_CASE("isOneWayPassable - jumping up passes through", "[physics][collision]")
+{
+	// 上昇中 (velocity.y < 0) + 上向き法線 (0, -1) → dot > 0 → 通過
+	REQUIRE(sgc::physics::isOneWayPassable({0.0f, -5.0f}, {0.0f, -1.0f}));
+}
+
+TEST_CASE("isCeilingContact - upward normal is ceiling", "[physics][collision]")
+{
+	REQUIRE(sgc::physics::isCeilingContact({0.0f, -0.8f}));
+}
+
+TEST_CASE("isCeilingContact - downward normal is not ceiling", "[physics][collision]")
+{
+	REQUIRE_FALSE(sgc::physics::isCeilingContact({0.0f, 0.8f}));
+}
