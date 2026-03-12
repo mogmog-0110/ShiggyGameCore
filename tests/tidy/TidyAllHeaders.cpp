@@ -118,6 +118,9 @@
 #include "sgc/physics/FixedTimestep.hpp"
 #include "sgc/physics/RayCast2D.hpp"
 #include "sgc/physics/RigidBody2D.hpp"
+#include "sgc/physics/CollisionResponse.hpp"
+#include "sgc/physics/Constraints.hpp"
+#include "sgc/physics/PhysicsWorld.hpp"
 
 // Effects
 #include "sgc/effects/ParticleSystem.hpp"

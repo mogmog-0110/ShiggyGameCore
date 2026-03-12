@@ -164,11 +164,17 @@ sgc_add_test_target(sgc_tests_game
 	physics/TestForceField.cpp
 	physics/TestCollisionFilter.cpp
 	physics/TestPhysicsWorld.cpp
+	physics/TestCollisionResponse.cpp
+	physics/TestPhysicsWorld3D.cpp
+	physics/TestConstraints.cpp
 
 	# Audio
 	audio/TestAudioPlayer.cpp
 	audio/TestAudioBus.cpp
 	audio/TestSpatialAudio.cpp
+	audio/TestSpatialAudio3D.cpp
+	audio/TestAudioBusGraph.cpp
+	audio/TestAudioStream.cpp
 )
 
 # ── 3) UI / Graphics / Graphics3D / Debug ──
@@ -184,6 +190,10 @@ sgc_add_test_target(sgc_tests_ui
 	graphics3d/TestMeshFactory.cpp
 	graphics3d/TestMaterial.cpp
 	graphics3d/TestRenderer3D.cpp
+	graphics3d/TestRenderPipeline3D.cpp
+	graphics3d/TestMaterialSystem.cpp
+	graphics3d/TestShadowMap.cpp
+	graphics3d/TestSkybox.cpp
 
 	# UI
 	ui/TestAnchor.cpp
@@ -227,6 +237,7 @@ sgc_add_test_target(sgc_tests_ui
 	debug/TestMemoryStats.cpp
 	debug/TestDebugDraw.cpp
 	debug/TestTweakable.cpp
+	debug/TestFrameGraph.cpp
 )
 
 # ── 4) Data / i18n / Network / Save / Procedural / etc ──
@@ -237,6 +248,7 @@ sgc_add_test_target(sgc_tests_data
 	resource/TestHotReloader.cpp
 	resource/TestAssetLoader.cpp
 	resource/TestAsyncLoadBatch.cpp
+	resource/TestAsyncLoader.cpp
 
 	# Config
 	config/TestConfigManager.cpp
@@ -255,6 +267,7 @@ sgc_add_test_target(sgc_tests_data
 	data/TestDataNode.cpp
 	data/TestJsonConfig.cpp
 	data/TestBinarySerializer.cpp
+	data/TestSceneSerializer.cpp
 
 	# i18n
 	i18n/TestStringTable.cpp
@@ -277,6 +290,19 @@ sgc_add_test_target(sgc_tests_data
 	vn/TestCharacter.cpp
 	vn/TestBacklog.cpp
 	vn/TestVNScene.cpp
+	vn/TestVNSaveData.cpp
+	vn/TestVNBacklog.cpp
+	vn/TestVNSkip.cpp
+
+	# Platformer
+	platformer/TestPlatformerPhysics.cpp
+	platformer/TestCameraFollow.cpp
+	platformer/TestTileCollider.cpp
+
+	# Roguelike
+	roguelike/TestDungeonLayout.cpp
+	roguelike/TestTurnManager.cpp
+	roguelike/TestInventory.cpp
 
 	# Save
 	save/TestSaveSystem.cpp
@@ -295,6 +321,8 @@ sgc_add_test_target(sgc_tests_data
 	# Asset
 	asset/TestAssetPipeline.cpp
 	asset/TestSpriteSheet.cpp
+	asset/TestAssetHandle.cpp
+	asset/TestAssetManager.cpp
 
 	# Scripting
 	scripting/TestScriptBindings.cpp
