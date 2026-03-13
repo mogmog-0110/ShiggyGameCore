@@ -71,6 +71,7 @@ sgc_add_test_target(sgc_tests_core
 	math/TestSpline.cpp
 	math/TestExpressionTree.cpp
 	math/TestNodeGraph.cpp
+	math/TestMathParser.cpp
 
 	# Memory
 	memory/TestArenaAllocator.cpp
@@ -167,6 +168,7 @@ sgc_add_test_target(sgc_tests_game
 	physics/TestCollisionResponse.cpp
 	physics/TestPhysicsWorld3D.cpp
 	physics/TestConstraints.cpp
+	physics/TestPhysics2D.cpp
 
 	# Audio
 	audio/TestAudioPlayer.cpp
@@ -175,6 +177,7 @@ sgc_add_test_target(sgc_tests_game
 	audio/TestSpatialAudio3D.cpp
 	audio/TestAudioBusGraph.cpp
 	audio/TestAudioStream.cpp
+	audio/TestWaveGenerator.cpp
 )
 
 # ── 3) UI / Graphics / Graphics3D / Debug ──
@@ -184,6 +187,7 @@ sgc_add_test_target(sgc_tests_ui
 	graphics/TestTextMeasure.cpp
 	graphics/TestTextRenderer.cpp
 	graphics/TestSpriteRenderer.cpp
+	graphics/TestCamera2D.cpp
 
 	# Graphics3D
 	graphics3d/TestCamera3D.cpp

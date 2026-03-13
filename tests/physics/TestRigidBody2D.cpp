@@ -30,11 +30,10 @@ TEST_CASE("RigidBody2D - applyForce accumulates", "[physics][RigidBody2D]")
 
 TEST_CASE("RigidBody2D - applyImpulse changes velocity", "[physics][RigidBody2D]")
 {
-	RigidBody2Df body;
-	body.mass = 2.0f;
+	auto body = RigidBody2Df::createDynamic(2.0f);
 	body.applyImpulse({10.0f, 0.0f});
 
-	REQUIRE(body.velocity.x == Approx(5.0f));  // impulse/m = 10/2
+	REQUIRE(body.velocity.x == Approx(5.0f));  // impulse * inverseMass = 10 * 0.5
 	REQUIRE(body.velocity.y == Approx(0.0f));
 }
 
